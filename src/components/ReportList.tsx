@@ -3,6 +3,7 @@ import type { Report, Expense } from '../types'
 import { formatMoney, newId } from '../types'
 import { listReports, listExpenses, saveReport, deleteReport } from '../db'
 import { exportBackup, importBackup, lastBackupAt, backupIsStale } from '../backup'
+import Icon from './icons'
 
 interface ReportSummary {
   report: Report
@@ -55,7 +56,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
     setBackupNote(null)
     try {
       const done = await exportBackup()
-      if (done) setBackupNote('Backup saved ✓')
+      if (done) setBackupNote('Backup saved')
     } catch {
       setBackupNote('Backup failed — try again')
     } finally {
@@ -70,7 +71,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
     setBackupNote(null)
     try {
       const { reports, expenses } = await importBackup(file)
-      setBackupNote(`Restored ${reports} report${reports === 1 ? '' : 's'}, ${expenses} expense${expenses === 1 ? '' : 's'} ✓`)
+      setBackupNote(`Restored ${reports} report${reports === 1 ? '' : 's'}, ${expenses} expense${expenses === 1 ? '' : 's'}`)
       await refresh()
     } catch {
       setBackupNote("Couldn't read that file — is it a Best Receipts backup?")
@@ -90,11 +91,13 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
     <>
       <header className="topbar">
         <div className="topbar-title">
-          <span className="logo">🧾</span>
+          <span className="logo">
+            <Icon name="receipt" size={24} />
+          </span>
           <h1>Best Receipts</h1>
         </div>
         <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => setMenuOpen(true)}>
-          ☰
+          <Icon name="menu" size={22} />
         </button>
       </header>
 
@@ -104,7 +107,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
             <div className="drawer-header">
               <h2>Menu</h2>
               <button className="icon-btn" aria-label="Close menu" onClick={() => setMenuOpen(false)}>
-                ✕
+                <Icon name="close" />
               </button>
             </div>
 
@@ -134,7 +137,9 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
           <p className="muted center">Loading…</p>
         ) : summaries.length === 0 && !creating ? (
           <div className="empty-state">
-            <div className="empty-icon">🧾</div>
+            <div className="empty-icon">
+              <Icon name="receipt" size={52} />
+            </div>
             <h2>No reports yet</h2>
             <p className="muted">Create a report, then scan receipts into it.</p>
           </div>
@@ -158,7 +163,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
                       void removeReport(report.id, report.name)
                     }}
                   >
-                    🗑
+                    <Icon name="trash" size={18} />
                   </button>
                 </div>
               </li>
@@ -174,7 +179,10 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
           return (
             <section className={`backup-card${stale ? ' stale' : ''}`}>
               <div className="backup-info">
-                <h3>{stale ? '⚠️ Back up your receipts' : 'Backup'}</h3>
+                <h3>
+                  {stale && <Icon name="warning" size={16} />}
+                  {stale ? 'Back up your receipts' : 'Backup'}
+                </h3>
                 <p className="muted">
                   {backupNote ??
                     (last

@@ -13,6 +13,7 @@ import {
   nextPosition,
 } from '../db'
 import { exportReportPdf } from '../pdf'
+import Icon from './icons'
 
 interface Props {
   reportId: string
@@ -142,7 +143,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
     <>
       <header className="topbar">
         <button className="icon-btn" onClick={onBack} aria-label="Back">
-          ←
+          <Icon name="chevron-left" size={22} />
         </button>
         {renaming ? (
           <form
@@ -185,7 +186,9 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
       <main className="content">
         {expenses.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📷</div>
+            <div className="empty-icon">
+              <Icon name="camera" size={52} />
+            </div>
             <h2>No expenses yet</h2>
             <p className="muted">Scan your first receipt to get started.</p>
           </div>
@@ -212,7 +215,9 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                     {expense.imageId && thumbs.get(expense.imageId) ? (
                       <img className="expense-thumb" src={thumbs.get(expense.imageId)} alt="" />
                     ) : (
-                      <div className="expense-thumb placeholder">🧾</div>
+                      <div className="expense-thumb placeholder">
+                        <Icon name="receipt" size={24} />
+                      </div>
                     )}
                     <div className="expense-info">
                       <h3>{expense.title || expense.merchant || 'Untitled expense'}</h3>
@@ -227,7 +232,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
 
                   <div className="expense-actions">
                     <button className="icon-btn" onClick={() => moveBy(index, -1)} disabled={index === 0} aria-label="Move up">
-                      ▲
+                      <Icon name="chevron-up" size={18} />
                     </button>
                     <button
                       className="icon-btn"
@@ -235,7 +240,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                       disabled={index === expenses.length - 1}
                       aria-label="Move down"
                     >
-                      ▼
+                      <Icon name="chevron-down" size={18} />
                     </button>
                     {otherReports.length > 0 && (
                       <button
@@ -243,11 +248,11 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                         onClick={() => setMovingId(movingId === expense.id ? null : expense.id)}
                         aria-label="Move to another report"
                       >
-                        ⇄
+                        <Icon name="swap" size={16} />
                       </button>
                     )}
                     <button className="icon-btn danger" onClick={() => void removeExpense(expense)} aria-label="Delete">
-                      🗑
+                      <Icon name="trash" size={17} />
                     </button>
                   </div>
 

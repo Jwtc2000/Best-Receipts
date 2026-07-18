@@ -4,6 +4,7 @@ import { CATEGORIES, newId } from '../types'
 import { getExpense, saveExpense, saveImage, getImage, deleteImage, nextPosition } from '../db'
 import { compressImage } from '../image'
 import { extractReceipt } from '../ocr'
+import Icon from './icons'
 
 interface Props {
   reportId: string
@@ -142,7 +143,7 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
     <>
       <header className="topbar">
         <button className="icon-btn" onClick={onDone} aria-label="Back">
-          ←
+          <Icon name="chevron-left" size={22} />
         </button>
         <h1>{expenseId ? 'Edit Expense' : 'New Expense'}</h1>
         <button className="btn primary small" onClick={() => void save()} disabled={!canSave || saving}>
@@ -171,22 +172,26 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
           <div className="receipt-preview">
             <img src={imageUrl} alt="Receipt" />
             <div className="preview-actions">
-              <button className="btn ghost small" onClick={() => cameraInput.current?.click()}>
-                📷 Retake
+              <button className="btn ghost small with-icon" onClick={() => cameraInput.current?.click()}>
+                <Icon name="camera" size={16} /> Retake
               </button>
-              <button className="btn ghost small" onClick={() => fileInput.current?.click()}>
-                🖼 Replace
+              <button className="btn ghost small with-icon" onClick={() => fileInput.current?.click()}>
+                <Icon name="image" size={16} /> Replace
               </button>
             </div>
           </div>
         ) : (
           <div className="capture-buttons">
             <button className="capture-btn" onClick={() => cameraInput.current?.click()}>
-              <span className="capture-icon">📷</span>
+              <span className="capture-icon">
+                <Icon name="camera" size={32} />
+              </span>
               Scan with camera
             </button>
             <button className="capture-btn" onClick={() => fileInput.current?.click()}>
-              <span className="capture-icon">🖼</span>
+              <span className="capture-icon">
+                <Icon name="image" size={32} />
+              </span>
               Choose photo
             </button>
           </div>
@@ -199,7 +204,7 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
           </div>
         )}
         {scanState === 'done' && (
-          <div className="scan-banner success">✓ Details extracted — review and adjust below</div>
+          <div className="scan-banner success">Details extracted — review and adjust below</div>
         )}
         {scanState === 'failed' && (
           <div className="scan-banner warn">Couldn't read the receipt — enter details manually</div>
