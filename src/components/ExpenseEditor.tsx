@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Expense } from '../types'
 import { CATEGORIES, newId } from '../types'
-import { getExpense, saveExpense, saveImage, getImage, deleteImage, nextPosition } from '../db'
+import { getExpense, saveExpenseWithImage, getImage, nextPosition } from '../db'
 import { compressImage } from '../image'
 import { extractReceipt } from '../ocr'
 import Icon from './icons'
@@ -110,12 +110,9 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
     if (isNaN(amount)) return
     setSaving(true)
     try {
-      let imageId = existing?.imageId
-      if (imageChanged && imageBlob) {
-        if (imageId) await deleteImage(imageId)
-        imageId = newId()
-        await saveImage({ id: imageId, blob: imageBlob })
-      }
+      const previousImageId = existing?.imageId
+      const replacingImage = imageChanged && imageBlob
+      const imageId = replacingImage ? newId() : previousImageId
       const expense: Expense = {
         id: existing?.id ?? newId(),
         reportId: existing?.reportId ?? reportId,
@@ -130,7 +127,11 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
         imageId,
         createdAt: existing?.createdAt ?? Date.now(),
       }
-      await saveExpense(expense)
+      await saveExpenseWithImage(
+        expense,
+        replacingImage ? { id: imageId!, blob: imageBlob! } : undefined,
+        replacingImage ? previousImageId : undefined,
+      )
       onDone()
     } finally {
       setSaving(false)

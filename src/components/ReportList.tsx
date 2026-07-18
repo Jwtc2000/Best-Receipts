@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Report, Expense } from '../types'
-import { formatMoney, newId } from '../types'
+import type { Report } from '../types'
+import { formatTotal, newId } from '../types'
 import { listReports, listExpenses, saveReport, deleteReport } from '../db'
 import { exportBackup, importBackup, lastBackupAt, backupIsStale } from '../backup'
 import Icon from './icons'
@@ -8,8 +8,7 @@ import Icon from './icons'
 interface ReportSummary {
   report: Report
   count: number
-  total: number
-  currency: string
+  totalDisplay: string
 }
 
 export default function ReportList({ onOpenReport }: { onOpenReport: (id: string) => void }) {
@@ -30,8 +29,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
       result.push({
         report,
         count: expenses.length,
-        total: expenses.reduce((s: number, e: Expense) => s + e.amount, 0),
-        currency: expenses[0]?.currency ?? 'USD',
+        totalDisplay: formatTotal(expenses),
       })
     }
     setSummaries(result)
@@ -148,7 +146,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
           </div>
         ) : (
           <ul className="report-list">
-            {summaries.map(({ report, count, total, currency }) => (
+            {summaries.map(({ report, count, totalDisplay }) => (
               <li key={report.id} className="report-card" onClick={() => onOpenReport(report.id)}>
                 <div className="report-card-main">
                   <h3>{report.name}</h3>
@@ -157,7 +155,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
                   </p>
                 </div>
                 <div className="report-card-side">
-                  <span className="report-total">{formatMoney(total, currency)}</span>
+                  <span className="report-total">{totalDisplay}</span>
                   <button
                     className="icon-btn danger"
                     aria-label={`Delete ${report.name}`}

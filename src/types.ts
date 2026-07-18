@@ -44,6 +44,18 @@ export function formatMoney(amount: number, currency: string): string {
   }
 }
 
+/**
+ * Sum amounts per currency and format each separately, since expenses in a
+ * report aren't necessarily all in the same currency and naively adding
+ * raw numbers across currencies would produce a meaningless total.
+ */
+export function formatTotal(expenses: { amount: number; currency: string }[]): string {
+  if (expenses.length === 0) return formatMoney(0, 'USD')
+  const totals = new Map<string, number>()
+  for (const e of expenses) totals.set(e.currency, (totals.get(e.currency) ?? 0) + e.amount)
+  return [...totals].map(([currency, amount]) => formatMoney(amount, currency)).join(' + ')
+}
+
 export function newId(): string {
   return crypto.randomUUID()
 }
