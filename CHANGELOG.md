@@ -7,6 +7,25 @@ bump `MAJOR` for breaking changes to stored data or backup format, `MINOR` for n
 user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About.
 
+## [1.6.0] - 2026-07-18
+
+### Added
+- Creating a report now asks for a trip start/end date (calendar picker),
+  which anchors "Day 1" for that report's timeline and PDF export — Day N
+  stays correct even if a day in the middle of the trip has no expenses.
+- A menu (sandwich icon) on the report screen lets you view and change a
+  report's trip dates at any time; all Day N labels update immediately.
+- Expenses are now sorted by their date rather than by manual add/reorder
+  order.
+- Moving an expense up or down past the edge of its day now reassigns its
+  date to the adjacent day, so the timeline and its date stay in sync.
+
+### Fixed
+- `nextPosition` assumed the expense list was sorted by position; now that
+  it's sorted by date, it computes the actual highest position instead —
+  otherwise two new expenses in the same report could have collided on
+  the same position.
+
 ## [1.5.0] - 2026-07-18
 
 ### Added

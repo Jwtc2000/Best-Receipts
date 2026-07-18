@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Expense, Report } from '../types'
-import { formatMoney, formatTotal, newId } from '../types'
+import { formatMoney, formatTotal, newId, todayIso } from '../types'
 import { listReports, listExpenses, saveReport, deleteReport } from '../db'
 import { exportBackup, importBackup, lastBackupAt, backupIsStale } from '../backup'
 import { getProfile, saveProfile, type Profile } from '../profile'
@@ -24,6 +24,8 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
   const [reportNames, setReportNames] = useState<Map<string, string>>(new Map())
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
+  const [newStartDate, setNewStartDate] = useState(todayIso)
+  const [newEndDate, setNewEndDate] = useState(todayIso)
   const [backupBusy, setBackupBusy] = useState(false)
   const [backupNote, setBackupNote] = useState<string | null>(null)
   const [backupTick, setBackupTick] = useState(0)
@@ -71,9 +73,13 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
   const createReport = async () => {
     const name = newName.trim()
     if (!name) return
-    const report: Report = { id: newId(), name, createdAt: Date.now() }
+    const startDate = newStartDate
+    const endDate = newEndDate < startDate ? startDate : newEndDate
+    const report: Report = { id: newId(), name, createdAt: Date.now(), startDate, endDate }
     await saveReport(report)
     setNewName('')
+    setNewStartDate(todayIso())
+    setNewEndDate(todayIso())
     setCreating(false)
     onOpenReport(report.id)
   }
@@ -360,6 +366,28 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
               />
+              <div className="field-grid">
+                <label className="field">
+                  <span>Trip start</span>
+                  <input
+                    type="date"
+                    value={newStartDate}
+                    onChange={(e) => {
+                      setNewStartDate(e.target.value)
+                      if (newEndDate < e.target.value) setNewEndDate(e.target.value)
+                    }}
+                  />
+                </label>
+                <label className="field">
+                  <span>Trip end</span>
+                  <input
+                    type="date"
+                    min={newStartDate}
+                    value={newEndDate}
+                    onChange={(e) => setNewEndDate(e.target.value)}
+                  />
+                </label>
+              </div>
               <div className="form-actions">
                 <button type="button" className="btn ghost" onClick={() => setCreating(false)}>
                   Cancel

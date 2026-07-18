@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import type { Report, Expense } from '../types'
-import { formatMoney, formatTotal, formatDate, dayNumbersByDate } from '../types'
+import { formatMoney, formatTotal, formatDate, dayNumbersByDate, resolveDateAfterMove, todayIso } from '../types'
 import {
   getReport,
   saveReport,
@@ -36,6 +36,9 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   const [nameDraft, setNameDraft] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [tripStartDraft, setTripStartDraft] = useState('')
+  const [tripEndDraft, setTripEndDraft] = useState('')
   const dragIndex = useRef<number | null>(null)
   const thumbsRef = useRef<Map<string, string>>(new Map())
 
@@ -101,7 +104,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   // or search filtering. A divider is shown above the first visible
   // expense of each date.
 
-  const dayNumberByDate = dayNumbersByDate(expenses)
+  const dayNumberByDate = dayNumbersByDate(expenses, report?.startDate)
   const dayDividerAt = new Set<number>()
   {
     let previousDate: string | null = null
@@ -125,6 +128,10 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
     if (target < 0 || target >= expenses.length) return
     const list = [...expenses]
     ;[list[index], list[target]] = [list[target], list[index]]
+    // Since the list is sorted by date, moving an expense past the edge of
+    // its day group means it's now part of the adjacent day — adopt that
+    // day's date so the sort order and the date stay consistent.
+    list[target] = { ...list[target], date: resolveDateAfterMove(list, target) }
     void persistOrder(list)
   }
 
@@ -135,6 +142,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
     const list = [...expenses]
     const [moved] = list.splice(from, 1)
     list.splice(dropIndex, 0, moved)
+    list[dropIndex] = { ...moved, date: resolveDateAfterMove(list, dropIndex) }
     void persistOrder(list)
   }
 
@@ -183,6 +191,25 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
       setReport({ ...report, name })
     }
     setRenaming(false)
+  }
+
+  const openMenu = () => {
+    if (!report) return
+    setTripStartDraft(report.startDate || todayIso())
+    setTripEndDraft(report.endDate || todayIso())
+    setMenuOpen(true)
+  }
+
+  const saveTripDates = async () => {
+    if (!report) return
+    const startDate = tripStartDraft
+    const endDate = tripEndDraft < startDate ? startDate : tripEndDraft
+    if (startDate !== report.startDate || endDate !== report.endDate) {
+      const updated = { ...report, startDate, endDate }
+      await saveReport(updated)
+      setReport(updated)
+    }
+    setTripEndDraft(endDate)
   }
 
   if (!report) return <p className="muted center">Loading…</p>
@@ -246,7 +273,57 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
             </>
           )}
         </div>
+        <button className="icon-btn" aria-label="Menu" onClick={openMenu}>
+          <Icon name="menu" size={20} />
+        </button>
       </header>
+
+      {menuOpen && (
+        <div className="drawer-backdrop" onClick={() => setMenuOpen(false)}>
+          <aside className="drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="drawer-header">
+              <h2>Report Menu</h2>
+              <button className="icon-btn" aria-label="Close menu" onClick={() => setMenuOpen(false)}>
+                <Icon name="close" />
+              </button>
+            </div>
+
+            <div className="drawer-section">
+              <section className="drawer-subsection">
+                <h3>Trip Dates</h3>
+                <p className="muted">
+                  Sets Day 1 for this report's timeline and PDF export — expenses are grouped by the
+                  number of days since the trip start.
+                </p>
+                <div className="field-grid">
+                  <label className="field">
+                    <span>Trip start</span>
+                    <input
+                      type="date"
+                      value={tripStartDraft}
+                      onChange={(e) => {
+                        setTripStartDraft(e.target.value)
+                        if (tripEndDraft < e.target.value) setTripEndDraft(e.target.value)
+                      }}
+                      onBlur={() => void saveTripDates()}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Trip end</span>
+                    <input
+                      type="date"
+                      min={tripStartDraft}
+                      value={tripEndDraft}
+                      onChange={(e) => setTripEndDraft(e.target.value)}
+                      onBlur={() => void saveTripDates()}
+                    />
+                  </label>
+                </div>
+              </section>
+            </div>
+          </aside>
+        </div>
+      )}
 
       {searchOpen && (
         <div className="search-bar">

@@ -1,5 +1,23 @@
 import { describe, expect, it } from 'vitest'
-import { formatTotal, dayNumbersByDate } from './types'
+import { formatTotal, dayNumbersByDate, sortExpensesByDate, resolveDateAfterMove } from './types'
+import type { Expense } from './types'
+
+function makeExpense(overrides: Partial<Expense> = {}): Expense {
+  return {
+    id: 'e1',
+    reportId: 'r1',
+    position: 0,
+    title: '',
+    merchant: '',
+    amount: 0,
+    currency: 'USD',
+    date: '',
+    category: 'Other',
+    notes: '',
+    createdAt: 1,
+    ...overrides,
+  }
+}
 
 describe('formatTotal', () => {
   it('sums same-currency expenses into a single total', () => {
@@ -66,5 +84,87 @@ describe('dayNumbersByDate', () => {
 
   it('returns an empty map when no expenses have a date', () => {
     expect(dayNumbersByDate([{ date: '' }, { date: '' }]).size).toBe(0)
+  })
+
+  it('computes Day N as the offset from the trip start date when given one', () => {
+    const map = dayNumbersByDate([{ date: '2026-07-20' }, { date: '2026-07-18' }], '2026-07-18')
+    expect(map.get('2026-07-18')).toBe(1)
+    expect(map.get('2026-07-20')).toBe(3)
+  })
+
+  it('keeps trip-start-based Day N stable even when a day has no expenses', () => {
+    // Only day 1 and day 4 have expenses, but day 4 should still read "Day 4",
+    // not "Day 2" (which a rank-based scheme would produce).
+    const map = dayNumbersByDate([{ date: '2026-07-18' }, { date: '2026-07-21' }], '2026-07-18')
+    expect(map.get('2026-07-18')).toBe(1)
+    expect(map.get('2026-07-21')).toBe(4)
+  })
+
+  it('allows a date before the trip start to read as Day 0 or earlier', () => {
+    const map = dayNumbersByDate([{ date: '2026-07-17' }], '2026-07-18')
+    expect(map.get('2026-07-17')).toBe(0)
+  })
+})
+
+describe('sortExpensesByDate', () => {
+  it('sorts by date ascending', () => {
+    const sorted = sortExpensesByDate([
+      makeExpense({ id: 'b', date: '2026-07-19' }),
+      makeExpense({ id: 'a', date: '2026-07-18' }),
+    ])
+    expect(sorted.map((e) => e.id)).toEqual(['a', 'b'])
+  })
+
+  it('breaks ties within the same date by position', () => {
+    const sorted = sortExpensesByDate([
+      makeExpense({ id: 'b', date: '2026-07-18', position: 1 }),
+      makeExpense({ id: 'a', date: '2026-07-18', position: 0 }),
+    ])
+    expect(sorted.map((e) => e.id)).toEqual(['a', 'b'])
+  })
+
+  it('sorts undated expenses after every dated one', () => {
+    const sorted = sortExpensesByDate([
+      makeExpense({ id: 'undated', date: '', position: 0 }),
+      makeExpense({ id: 'dated', date: '2026-07-18', position: 1 }),
+    ])
+    expect(sorted.map((e) => e.id)).toEqual(['dated', 'undated'])
+  })
+
+  it('does not mutate the input array', () => {
+    const input = [makeExpense({ id: 'a', date: '2026-07-19' }), makeExpense({ id: 'b', date: '2026-07-18' })]
+    const original = [...input]
+    sortExpensesByDate(input)
+    expect(input).toEqual(original)
+  })
+})
+
+describe('resolveDateAfterMove', () => {
+  it('adopts the date of the item before it', () => {
+    const list = [
+      makeExpense({ id: 'a', date: '2026-07-18' }),
+      makeExpense({ id: 'moved', date: '2026-07-19' }),
+      makeExpense({ id: 'c', date: '2026-07-20' }),
+    ]
+    expect(resolveDateAfterMove(list, 1)).toBe('2026-07-18')
+  })
+
+  it('adopts the date of the item after it when moved to the very start', () => {
+    const list = [makeExpense({ id: 'moved', date: '2026-07-19' }), makeExpense({ id: 'b', date: '2026-07-20' })]
+    expect(resolveDateAfterMove(list, 0)).toBe('2026-07-20')
+  })
+
+  it('keeps its own date when there is no dated neighbor', () => {
+    const list = [makeExpense({ id: 'only', date: '2026-07-19' })]
+    expect(resolveDateAfterMove(list, 0)).toBe('2026-07-19')
+  })
+
+  it('skips an undated neighbor before it and falls through to the one after', () => {
+    const list = [
+      makeExpense({ id: 'before', date: '' }),
+      makeExpense({ id: 'moved', date: '2026-07-19' }),
+      makeExpense({ id: 'after', date: '2026-07-20' }),
+    ]
+    expect(resolveDateAfterMove(list, 1)).toBe('2026-07-20')
   })
 })

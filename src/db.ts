@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { Report, Expense, ReceiptImage } from './types'
+import { sortExpensesByDate } from './types'
 
 interface BestReceiptsDB extends DBSchema {
   reports: {
@@ -73,7 +74,7 @@ export async function getExpense(id: string): Promise<Expense | undefined> {
 export async function listExpenses(reportId: string): Promise<Expense[]> {
   const db = await getDB()
   const expenses = await db.getAllFromIndex('expenses', 'by-report', reportId)
-  return expenses.sort((a, b) => a.position - b.position)
+  return sortExpensesByDate(expenses)
 }
 
 export async function saveExpense(expense: Expense): Promise<void> {
@@ -119,7 +120,9 @@ export async function deleteExpense(id: string): Promise<void> {
 
 export async function nextPosition(reportId: string): Promise<number> {
   const expenses = await listExpenses(reportId)
-  return expenses.length === 0 ? 0 : expenses[expenses.length - 1].position + 1
+  // listExpenses is sorted by date, not position, so the last entry isn't
+  // necessarily the highest position — take the actual max.
+  return expenses.length === 0 ? 0 : Math.max(...expenses.map((e) => e.position)) + 1
 }
 
 export async function listAllExpenses(): Promise<Expense[]> {
