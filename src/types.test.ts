@@ -24,4 +24,13 @@ describe('formatTotal', () => {
   it('returns a zero total for an empty report', () => {
     expect(formatTotal([])).toBe('$0.00')
   })
+
+  it('merges currency codes that only differ by case (regression)', () => {
+    expect(
+      formatTotal([
+        { amount: 20, currency: 'USD' },
+        { amount: 15, currency: 'usd' },
+      ]),
+    ).toBe('$35.00')
+  })
 })
