@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Report } from '../types'
-import { formatTotal, newId } from '../types'
+import type { Expense, Report } from '../types'
+import { formatMoney, formatTotal, newId } from '../types'
 import { listReports, listExpenses, saveReport, deleteReport } from '../db'
 import { exportBackup, importBackup, lastBackupAt, backupIsStale } from '../backup'
 import { getProfile, saveProfile, type Profile } from '../profile'
+import { expenseMatches } from '../search'
 import Icon from './icons'
 
 interface ReportSummary {
@@ -12,14 +13,23 @@ interface ReportSummary {
   totalDisplay: string
 }
 
-export default function ReportList({ onOpenReport }: { onOpenReport: (id: string) => void }) {
+interface Props {
+  onOpenReport: (id: string) => void
+  onEditExpense: (reportId: string, expenseId: string) => void
+}
+
+export default function ReportList({ onOpenReport, onEditExpense }: Props) {
   const [summaries, setSummaries] = useState<ReportSummary[] | null>(null)
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([])
+  const [reportNames, setReportNames] = useState<Map<string, string>>(new Map())
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [backupBusy, setBackupBusy] = useState(false)
   const [backupNote, setBackupNote] = useState<string | null>(null)
   const [backupTick, setBackupTick] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const [profile, setProfile] = useState<Profile>(() => getProfile())
   const restoreInput = useRef<HTMLInputElement>(null)
 
@@ -29,8 +39,12 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
   const refresh = async () => {
     const reports = await listReports()
     const result: ReportSummary[] = []
+    const flatExpenses: Expense[] = []
+    const names = new Map<string, string>()
     for (const report of reports) {
       const expenses = await listExpenses(report.id)
+      flatExpenses.push(...expenses)
+      names.set(report.id, report.name)
       result.push({
         report,
         count: expenses.length,
@@ -38,11 +52,21 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
       })
     }
     setSummaries(result)
+    setAllExpenses(flatExpenses)
+    setReportNames(names)
   }
 
   useEffect(() => {
     void refresh()
   }, [])
+
+  const query = searchQuery.trim()
+  const searchResults = query ? allExpenses.filter((e) => expenseMatches(e, query)) : []
+
+  const toggleSearch = () => {
+    if (searchOpen) setSearchQuery('')
+    setSearchOpen((v) => !v)
+  }
 
   const createReport = async () => {
     const name = newName.trim()
@@ -102,10 +126,36 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
             <Icon name="express-arrow" size={26} />
           </span>
         </div>
+        <button
+          className="icon-btn"
+          aria-label={searchOpen ? 'Close search' : 'Search expenses'}
+          onClick={toggleSearch}
+        >
+          <Icon name={searchOpen ? 'close' : 'search'} size={22} />
+        </button>
         <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => setMenuOpen(true)}>
           <Icon name="menu" size={22} />
         </button>
       </header>
+
+      {searchOpen && (
+        <div className="search-bar">
+          <Icon name="search" size={16} />
+          <input
+            autoFocus
+            type="text"
+            inputMode="search"
+            placeholder="Search all expenses by title, merchant, or amount…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="icon-btn" aria-label="Clear search" onClick={() => setSearchQuery('')}>
+              <Icon name="close" size={14} />
+            </button>
+          )}
+        </div>
+      )}
 
       {menuOpen && (
         <div className="drawer-backdrop" onClick={() => setMenuOpen(false)}>
@@ -187,7 +237,37 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
       )}
 
       <main className="content">
-        {summaries === null ? (
+        {query ? (
+          searchResults.length === 0 ? (
+            <div className="empty-state">
+              <div className="empty-icon">
+                <Icon name="search" size={52} />
+              </div>
+              <h2>No matches</h2>
+              <p className="muted">Try a different title, merchant, or amount.</p>
+            </div>
+          ) : (
+            <ul className="report-list">
+              {searchResults.map((expense) => (
+                <li
+                  key={expense.id}
+                  className="report-card"
+                  onClick={() => onEditExpense(expense.reportId, expense.id)}
+                >
+                  <div className="report-card-main">
+                    <h3>{expense.title || expense.merchant || 'Untitled expense'}</h3>
+                    <p className="muted">
+                      {reportNames.get(expense.reportId) ?? 'Unknown report'} · {expense.date || 'No date'}
+                    </p>
+                  </div>
+                  <div className="report-card-side">
+                    <span className="report-total">{formatMoney(expense.amount, expense.currency)}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        ) : summaries === null ? (
           <p className="muted center">Loading…</p>
         ) : summaries.length === 0 && !creating ? (
           <div className="empty-state">
@@ -225,7 +305,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
           </ul>
         )}
 
-        {summaries !== null && (() => {
+        {!query && summaries !== null && (() => {
           void backupTick // re-read localStorage after each backup
           const hasData = summaries.some((s) => s.count > 0)
           const last = lastBackupAt()
@@ -265,34 +345,35 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
           )
         })()}
 
-        {creating ? (
-          <form
-            className="new-report-form"
-            onSubmit={(e) => {
-              e.preventDefault()
-              void createReport()
-            }}
-          >
-            <input
-              autoFocus
-              placeholder="Report name — e.g. NYC Trip July"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-            <div className="form-actions">
-              <button type="button" className="btn ghost" onClick={() => setCreating(false)}>
-                Cancel
-              </button>
-              <button type="submit" className="btn primary" disabled={!newName.trim()}>
-                Create
-              </button>
-            </div>
-          </form>
-        ) : (
-          <button className="fab" onClick={() => setCreating(true)}>
-            + New Report
-          </button>
-        )}
+        {!query &&
+          (creating ? (
+            <form
+              className="new-report-form"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void createReport()
+              }}
+            >
+              <input
+                autoFocus
+                placeholder="Report name — e.g. NYC Trip July"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+              />
+              <div className="form-actions">
+                <button type="button" className="btn ghost" onClick={() => setCreating(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn primary" disabled={!newName.trim()}>
+                  Create
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button className="fab" onClick={() => setCreating(true)}>
+              + New Report
+            </button>
+          ))}
       </main>
     </>
   )

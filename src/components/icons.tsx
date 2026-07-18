@@ -13,6 +13,7 @@ export type IconName =
   | 'close'
   | 'warning'
   | 'express-arrow'
+  | 'search'
 
 const PATHS: Record<IconName, ReactNode> = {
   receipt: (
@@ -79,6 +80,12 @@ const PATHS: Record<IconName, ReactNode> = {
       <polyline points="13 6 19 12 13 18" />
       <line x1="1" y1="7" x2="6" y2="7" />
       <line x1="1" y1="17" x2="6" y2="17" />
+    </>
+  ),
+  search: (
+    <>
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
     </>
   ),
 }

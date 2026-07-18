@@ -1,6 +1,7 @@
 import type { Report, Expense, ReceiptImage } from './types'
 import { listReports, listAllExpenses, listAllImages, importBackupData } from './db'
 import { blobToDataURL } from './image'
+import { shareOrDownloadFile } from './share'
 
 const APP_ID = 'receipts-express'
 // Backups written before the rename carry the old id; still accepted on import.
@@ -176,24 +177,9 @@ export async function exportBackup(): Promise<boolean> {
   const blob = await buildBackupBlob()
   const name = `receipts-express-backup-${new Date().toISOString().slice(0, 10)}.json`
   const file = new File([blob], name, { type: 'application/json' })
-
-  if (navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({ files: [file], title: 'Receipts Express backup' })
-    } catch (err) {
-      if ((err as DOMException).name === 'AbortError') return false
-      throw err
-    }
-  } else {
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = name
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-  localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()))
-  return true
+  const handedOff = await shareOrDownloadFile(file, 'Receipts Express backup')
+  if (handedOff) localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()))
+  return handedOff
 }
 
 /**
