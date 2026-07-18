@@ -10,7 +10,7 @@ pipeline {
 
         stage('SAST') {
             steps {
-                sh 'semgrep scan --config auto --error --metrics=off .'
+                sh 'semgrep scan --config p/default --error --metrics=off .'
             }
         }
     }
