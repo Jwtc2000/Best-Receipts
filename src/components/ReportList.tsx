@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Report, Expense } from '../types'
 import { formatMoney, newId } from '../types'
 import { listReports, listExpenses, saveReport, deleteReport } from '../db'
+import { exportBackup, importBackup, lastBackupAt, backupIsStale } from '../backup'
 
 interface ReportSummary {
   report: Report
@@ -14,6 +15,10 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
   const [summaries, setSummaries] = useState<ReportSummary[] | null>(null)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
+  const [backupBusy, setBackupBusy] = useState(false)
+  const [backupNote, setBackupNote] = useState<string | null>(null)
+  const [backupTick, setBackupTick] = useState(0)
+  const restoreInput = useRef<HTMLInputElement>(null)
 
   const refresh = async () => {
     const reports = await listReports()
@@ -42,6 +47,36 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
     setNewName('')
     setCreating(false)
     onOpenReport(report.id)
+  }
+
+  const doBackup = async () => {
+    setBackupBusy(true)
+    setBackupNote(null)
+    try {
+      const done = await exportBackup()
+      if (done) setBackupNote('Backup saved ✓')
+    } catch {
+      setBackupNote('Backup failed — try again')
+    } finally {
+      setBackupBusy(false)
+      setBackupTick((t) => t + 1)
+    }
+  }
+
+  const doRestore = async (file: File | undefined) => {
+    if (!file) return
+    setBackupBusy(true)
+    setBackupNote(null)
+    try {
+      const { reports, expenses } = await importBackup(file)
+      setBackupNote(`Restored ${reports} report${reports === 1 ? '' : 's'}, ${expenses} expense${expenses === 1 ? '' : 's'} ✓`)
+      await refresh()
+    } catch {
+      setBackupNote("Couldn't read that file — is it a Best Receipts backup?")
+    } finally {
+      setBackupBusy(false)
+      if (restoreInput.current) restoreInput.current.value = ''
+    }
   }
 
   const removeReport = async (id: string, name: string) => {
@@ -95,6 +130,43 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
             ))}
           </ul>
         )}
+
+        {summaries !== null && (() => {
+          void backupTick // re-read localStorage after each backup
+          const hasData = summaries.some((s) => s.count > 0)
+          const last = lastBackupAt()
+          const stale = hasData && backupIsStale()
+          return (
+            <section className={`backup-card${stale ? ' stale' : ''}`}>
+              <div className="backup-info">
+                <h3>{stale ? '⚠️ Back up your receipts' : 'Backup'}</h3>
+                <p className="muted">
+                  {backupNote ??
+                    (last
+                      ? `Last backup ${new Date(last).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                      : hasData
+                        ? 'Never backed up — save a copy of your data'
+                        : 'Backs up all reports and receipt photos to a file')}
+                </p>
+              </div>
+              <div className="backup-actions">
+                <button className="btn primary small" onClick={() => void doBackup()} disabled={backupBusy}>
+                  {backupBusy ? 'Working…' : 'Back up now'}
+                </button>
+                <button className="btn ghost small" onClick={() => restoreInput.current?.click()} disabled={backupBusy}>
+                  Restore
+                </button>
+              </div>
+              <input
+                ref={restoreInput}
+                type="file"
+                accept="application/json,.json"
+                hidden
+                onChange={(e) => void doRestore(e.target.files?.[0])}
+              />
+            </section>
+          )
+        })()}
 
         {creating ? (
           <form

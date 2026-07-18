@@ -262,6 +262,36 @@ body {
   gap: 10px;
 }
 
+/* ---- Backup card ---- */
+
+.backup-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.backup-card.stale {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.backup-card h3 {
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.backup-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ---- Report summary bar ---- */
 
 .report-summary-bar {

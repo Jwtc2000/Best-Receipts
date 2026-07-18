@@ -102,7 +102,17 @@ export async function nextPosition(reportId: string): Promise<number> {
   return expenses.length === 0 ? 0 : expenses[expenses.length - 1].position + 1
 }
 
+export async function listAllExpenses(): Promise<Expense[]> {
+  const db = await getDB()
+  return db.getAll('expenses')
+}
+
 // ---- Images ----
+
+export async function listAllImages(): Promise<ReceiptImage[]> {
+  const db = await getDB()
+  return db.getAll('images')
+}
 
 export async function saveImage(image: ReceiptImage): Promise<void> {
   const db = await getDB()
