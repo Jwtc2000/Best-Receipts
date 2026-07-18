@@ -18,6 +18,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
   const [backupBusy, setBackupBusy] = useState(false)
   const [backupNote, setBackupNote] = useState<string | null>(null)
   const [backupTick, setBackupTick] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false)
   const restoreInput = useRef<HTMLInputElement>(null)
 
   const refresh = async () => {
@@ -92,7 +93,41 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
           <span className="logo">🧾</span>
           <h1>Best Receipts</h1>
         </div>
+        <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => setMenuOpen(true)}>
+          ☰
+        </button>
       </header>
+
+      {menuOpen && (
+        <div className="drawer-backdrop" onClick={() => setMenuOpen(false)}>
+          <aside className="drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="drawer-header">
+              <h2>Menu</h2>
+              <button className="icon-btn" aria-label="Close menu" onClick={() => setMenuOpen(false)}>
+                ✕
+              </button>
+            </div>
+
+            <section className="drawer-section">
+              <h3>About</h3>
+              <p>
+                Best Receipts scans your receipts with on-device OCR, organizes them into expense
+                reports, and exports polished PDFs.
+              </p>
+              <p>
+                Everything stays on your device — receipts and reports are stored locally and are
+                never uploaded anywhere. Use the Backup card on the home screen to keep an
+                off-device copy.
+              </p>
+              <p className="muted">Version 1.0.0</p>
+            </section>
+
+            <footer className="drawer-footer">
+              Assembled by Jordan WT Campbell with Claude Code
+            </footer>
+          </aside>
+        </div>
+      )}
 
       <main className="content">
         {summaries === null ? (
