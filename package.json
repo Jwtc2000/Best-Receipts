@@ -1,0 +1,31 @@
+{
+  "name": "best-receipts",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Scan receipts, organize expense reports, export polished PDFs.",
+  "type": "module",
+  "scripts": {
+    "prepare-assets": "node scripts/copy-tesseract-assets.mjs",
+    "predev": "npm run prepare-assets",
+    "prebuild": "npm run prepare-assets",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tesseract.js-data/eng": "^1.0.0",
+    "idb": "^8.0.0",
+    "jspdf": "^2.5.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tesseract.js": "^5.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.3",
+    "vite-plugin-pwa": "^0.21.1"
+  }
+}

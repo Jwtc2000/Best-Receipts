@@ -1,0 +1,120 @@
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
+import type { Report, Expense, ReceiptImage } from './types'
+
+interface BestReceiptsDB extends DBSchema {
+  reports: {
+    key: string
+    value: Report
+  }
+  expenses: {
+    key: string
+    value: Expense
+    indexes: { 'by-report': string }
+  }
+  images: {
+    key: string
+    value: ReceiptImage
+  }
+}
+
+let dbPromise: Promise<IDBPDatabase<BestReceiptsDB>> | null = null
+
+function getDB() {
+  if (!dbPromise) {
+    dbPromise = openDB<BestReceiptsDB>('best-receipts', 1, {
+      upgrade(db) {
+        db.createObjectStore('reports', { keyPath: 'id' })
+        const expenses = db.createObjectStore('expenses', { keyPath: 'id' })
+        expenses.createIndex('by-report', 'reportId')
+        db.createObjectStore('images', { keyPath: 'id' })
+      },
+    })
+  }
+  return dbPromise
+}
+
+// ---- Reports ----
+
+export async function listReports(): Promise<Report[]> {
+  const db = await getDB()
+  const reports = await db.getAll('reports')
+  return reports.sort((a, b) => b.createdAt - a.createdAt)
+}
+
+export async function getReport(id: string): Promise<Report | undefined> {
+  const db = await getDB()
+  return db.get('reports', id)
+}
+
+export async function saveReport(report: Report): Promise<void> {
+  const db = await getDB()
+  await db.put('reports', report)
+}
+
+export async function deleteReport(id: string): Promise<void> {
+  const db = await getDB()
+  const expenses = await db.getAllFromIndex('expenses', 'by-report', id)
+  const tx = db.transaction(['reports', 'expenses', 'images'], 'readwrite')
+  for (const expense of expenses) {
+    void tx.objectStore('expenses').delete(expense.id)
+    if (expense.imageId) void tx.objectStore('images').delete(expense.imageId)
+  }
+  void tx.objectStore('reports').delete(id)
+  await tx.done
+}
+
+// ---- Expenses ----
+
+export async function getExpense(id: string): Promise<Expense | undefined> {
+  const db = await getDB()
+  return db.get('expenses', id)
+}
+
+export async function listExpenses(reportId: string): Promise<Expense[]> {
+  const db = await getDB()
+  const expenses = await db.getAllFromIndex('expenses', 'by-report', reportId)
+  return expenses.sort((a, b) => a.position - b.position)
+}
+
+export async function saveExpense(expense: Expense): Promise<void> {
+  const db = await getDB()
+  await db.put('expenses', expense)
+}
+
+export async function saveExpenses(expenses: Expense[]): Promise<void> {
+  const db = await getDB()
+  const tx = db.transaction('expenses', 'readwrite')
+  for (const expense of expenses) void tx.store.put(expense)
+  await tx.done
+}
+
+export async function deleteExpense(id: string): Promise<void> {
+  const db = await getDB()
+  const expense = await db.get('expenses', id)
+  const tx = db.transaction(['expenses', 'images'], 'readwrite')
+  void tx.objectStore('expenses').delete(id)
+  if (expense?.imageId) void tx.objectStore('images').delete(expense.imageId)
+  await tx.done
+}
+
+export async function nextPosition(reportId: string): Promise<number> {
+  const expenses = await listExpenses(reportId)
+  return expenses.length === 0 ? 0 : expenses[expenses.length - 1].position + 1
+}
+
+// ---- Images ----
+
+export async function saveImage(image: ReceiptImage): Promise<void> {
+  const db = await getDB()
+  await db.put('images', image)
+}
+
+export async function getImage(id: string): Promise<ReceiptImage | undefined> {
+  const db = await getDB()
+  return db.get('images', id)
+}
+
+export async function deleteImage(id: string): Promise<void> {
+  const db = await getDB()
+  await db.delete('images', id)
+}
