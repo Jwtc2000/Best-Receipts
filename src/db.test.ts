@@ -62,6 +62,19 @@ describe('saveExpenseWithImage', () => {
     expect(await db.getImage(image.id)).toBeDefined()
     expect(await db.getExpense(expense.id)).toMatchObject({ imageId: image.id })
   })
+
+  it('removes the image entirely when no replacement is given (regression)', async () => {
+    const db = await import('./db')
+    const image = { id: 'image-1', blob: new Blob(['data']) }
+    await db.saveImage(image)
+    await db.saveExpense(makeExpense({ imageId: image.id }))
+
+    const withoutImage = makeExpense({ imageId: undefined })
+    await db.saveExpenseWithImage(withoutImage, undefined, image.id)
+
+    expect(await db.getImage(image.id)).toBeUndefined()
+    expect(await db.getExpense(withoutImage.id)).toMatchObject({ imageId: undefined })
+  })
 })
 
 describe('listExpenses', () => {

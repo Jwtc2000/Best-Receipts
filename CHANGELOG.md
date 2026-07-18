@@ -7,6 +7,37 @@ bump `MAJOR` for breaking changes to stored data or backup format, `MINOR` for n
 user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About.
 
+## [1.8.0] - 2026-07-18
+
+### Added
+- The app header now uses a purple-to-orange gradient (`#660099` →
+  `#ff6600`).
+- Each "Day N" banner now gets its own distinct color sampled along that
+  same gradient (cycling every 6 days), instead of one fixed purple —
+  identical between the in-app timeline and the PDF export, since both
+  now share the same color logic (`src/colors.ts`). Text color (white or
+  black) is chosen per banner via a WCAG contrast check, since white
+  reads well against the purple end of the gradient but poorly against
+  the orange end.
+
+## [1.7.0] - 2026-07-18
+
+### Added
+- The "DAY N" banner now appears on every per-receipt page of the PDF
+  export, not just the summary table.
+- A "Remove" option next to Retake/Replace lets you delete a receipt
+  photo from an expense entirely, instead of only being able to replace
+  it with another photo.
+- Expenses with no receipt photo now show a custom crossed-out-circle
+  icon in the PDF export — a large one in place of the photo on that
+  expense's own page, and a small one next to its row on the summary
+  page.
+
+### Fixed
+- Saving an expense after removing its photo previously left the old
+  image attached (the save logic only handled replacing an image, not
+  clearing one) — removal is now a distinct, correctly-handled case.
+
 ## [1.6.0] - 2026-07-18
 
 ### Added
