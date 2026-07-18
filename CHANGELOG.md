@@ -7,6 +7,25 @@ bump `MAJOR` for breaking changes to stored data or backup format, `MINOR` for n
 user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About.
 
+## [1.9.0] - 2026-07-18
+
+### Added
+- Creating a report now also asks for a daily meal allowance (optional),
+  editable later from the report's sandwich menu alongside the trip
+  dates.
+- Each day banner now shows a food balance ("Food $30.00 used ·
+  $20.00 left"), based on that day's Meals-category spending against
+  the daily allowance — with a warning when a day goes over.
+- Expenses can now have a "personal amount" — a portion of the total
+  the employee is covering themselves rather than the company. It's
+  excluded from the food-balance calculation and summarized in a new
+  "Employee pays credit card company" line on the report and PDF
+  summary.
+- The PDF summary table has a new "Pay Back" column showing each
+  expense's personal amount, and Meals-category rows now show a small
+  custom burger icon (drawn with jsPDF's vector primitives, matching
+  the existing no-receipt icon's style) next to the item line.
+
 ## [1.8.0] - 2026-07-18
 
 ### Added

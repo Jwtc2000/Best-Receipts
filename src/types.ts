@@ -6,6 +6,8 @@ export interface Report {
   startDate?: string
   /** ISO date string yyyy-mm-dd — the trip's last day. */
   endDate?: string
+  /** Per-day cap on reimbursable Meals spending; unset/0 disables the food-balance feature. */
+  dailyMealAllowance?: number
 }
 
 export interface Expense {
@@ -23,6 +25,8 @@ export interface Expense {
   notes: string
   imageId?: string
   createdAt: number
+  /** Portion of `amount` the employee is personally covering (not reimbursable). */
+  personalAmount?: number
 }
 
 export interface ReceiptImage {

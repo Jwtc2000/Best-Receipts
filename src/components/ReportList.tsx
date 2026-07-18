@@ -26,6 +26,7 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
   const [newName, setNewName] = useState('')
   const [newStartDate, setNewStartDate] = useState(todayIso)
   const [newEndDate, setNewEndDate] = useState(todayIso)
+  const [newMealAllowance, setNewMealAllowance] = useState('')
   const [backupBusy, setBackupBusy] = useState(false)
   const [backupNote, setBackupNote] = useState<string | null>(null)
   const [backupTick, setBackupTick] = useState(0)
@@ -75,11 +76,13 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
     if (!name) return
     const startDate = newStartDate
     const endDate = newEndDate < startDate ? startDate : newEndDate
-    const report: Report = { id: newId(), name, createdAt: Date.now(), startDate, endDate }
+    const dailyMealAllowance = Math.max(0, parseFloat(newMealAllowance)) || 0
+    const report: Report = { id: newId(), name, createdAt: Date.now(), startDate, endDate, dailyMealAllowance }
     await saveReport(report)
     setNewName('')
     setNewStartDate(todayIso())
     setNewEndDate(todayIso())
+    setNewMealAllowance('')
     setCreating(false)
     onOpenReport(report.id)
   }
@@ -385,6 +388,18 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
                     min={newStartDate}
                     value={newEndDate}
                     onChange={(e) => setNewEndDate(e.target.value)}
+                  />
+                </label>
+                <label className="field span-2">
+                  <span>Daily meal allowance (optional)</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={newMealAllowance}
+                    onChange={(e) => setNewMealAllowance(e.target.value)}
                   />
                 </label>
               </div>

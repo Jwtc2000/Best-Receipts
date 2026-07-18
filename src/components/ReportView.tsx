@@ -16,6 +16,7 @@ import { exportReportPdf } from '../pdf'
 import { exportReportCsv } from '../csv'
 import { expenseMatches } from '../search'
 import { dayColor, contrastText, rgbToCss } from '../colors'
+import { foodBalanceForDate, formatFoodBalance, formatPersonalTotal } from '../mealAllowance'
 import Icon from './icons'
 
 interface Props {
@@ -40,6 +41,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   const [menuOpen, setMenuOpen] = useState(false)
   const [tripStartDraft, setTripStartDraft] = useState('')
   const [tripEndDraft, setTripEndDraft] = useState('')
+  const [mealAllowanceDraft, setMealAllowanceDraft] = useState('')
   const dragIndex = useRef<number | null>(null)
   const thumbsRef = useRef<Map<string, string>>(new Map())
 
@@ -83,6 +85,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   }, [reportId])
 
   const totalDisplay = formatTotal(expenses)
+  const personalTotal = formatPersonalTotal(expenses)
 
   // ---- Search ----
 
@@ -198,15 +201,21 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
     if (!report) return
     setTripStartDraft(report.startDate || todayIso())
     setTripEndDraft(report.endDate || todayIso())
+    setMealAllowanceDraft(report.dailyMealAllowance ? String(report.dailyMealAllowance) : '')
     setMenuOpen(true)
   }
 
-  const saveTripDates = async () => {
+  const saveTripSettings = async () => {
     if (!report) return
     const startDate = tripStartDraft
     const endDate = tripEndDraft < startDate ? startDate : tripEndDraft
-    if (startDate !== report.startDate || endDate !== report.endDate) {
-      const updated = { ...report, startDate, endDate }
+    const dailyMealAllowance = Math.max(0, parseFloat(mealAllowanceDraft)) || 0
+    if (
+      startDate !== report.startDate ||
+      endDate !== report.endDate ||
+      dailyMealAllowance !== (report.dailyMealAllowance ?? 0)
+    ) {
+      const updated = { ...report, startDate, endDate, dailyMealAllowance }
       await saveReport(updated)
       setReport(updated)
     }
@@ -306,7 +315,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                         setTripStartDraft(e.target.value)
                         if (tripEndDraft < e.target.value) setTripEndDraft(e.target.value)
                       }}
-                      onBlur={() => void saveTripDates()}
+                      onBlur={() => void saveTripSettings()}
                     />
                   </label>
                   <label className="field">
@@ -316,7 +325,20 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                       min={tripStartDraft}
                       value={tripEndDraft}
                       onChange={(e) => setTripEndDraft(e.target.value)}
-                      onBlur={() => void saveTripDates()}
+                      onBlur={() => void saveTripSettings()}
+                    />
+                  </label>
+                  <label className="field span-2">
+                    <span>Daily meal allowance</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
+                      placeholder="0.00"
+                      value={mealAllowanceDraft}
+                      onChange={(e) => setMealAllowanceDraft(e.target.value)}
+                      onBlur={() => void saveTripSettings()}
                     />
                   </label>
                 </div>
@@ -354,6 +376,15 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
         <strong>{totalDisplay}</strong>
       </div>
 
+      {personalTotal && (
+        <div className="report-payback-bar">
+          <Icon name="warning" size={14} />
+          <span>
+            Employee pays credit card company: <strong>{personalTotal}</strong>
+          </span>
+        </div>
+      )}
+
       <main className="content">
         {expenses.length === 0 ? (
           <div className="empty-state">
@@ -377,6 +408,9 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
               if (searching && !expenseMatches(expense, query)) return null
               const dayNumber = dayDividerAt.has(index) ? dayNumberByDate.get(expense.date) : undefined
               const dayBg = dayNumber !== undefined ? dayColor(dayNumber) : null
+              const foodBalance = report.dailyMealAllowance
+                ? foodBalanceForDate(expenses, expense.date, report.dailyMealAllowance)
+                : null
               return (
               <Fragment key={expense.id}>
               {dayNumber !== undefined && dayBg && (
@@ -384,8 +418,16 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                   className="day-divider"
                   style={{ backgroundColor: rgbToCss(dayBg), color: rgbToCss(contrastText(dayBg)) }}
                 >
-                  <span className="day-divider-label">Day {dayNumber}</span>
-                  <span className="day-divider-date">{formatDate(expense.date)}</span>
+                  <div className="day-divider-top">
+                    <span className="day-divider-label">Day {dayNumber}</span>
+                    <span className="day-divider-date">{formatDate(expense.date)}</span>
+                  </div>
+                  {foodBalance && (
+                    <div className="day-divider-food">
+                      {foodBalance.over && <Icon name="warning" size={12} />}
+                      {formatFoodBalance(foodBalance)}
+                    </div>
+                  )}
                 </li>
               )}
               <li

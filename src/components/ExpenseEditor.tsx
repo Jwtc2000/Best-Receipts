@@ -20,6 +20,7 @@ interface Draft {
   date: string
   category: string
   notes: string
+  personalAmount: string
 }
 
 const emptyDraft: Draft = {
@@ -30,6 +31,7 @@ const emptyDraft: Draft = {
   date: new Date().toISOString().slice(0, 10),
   category: 'Other',
   notes: '',
+  personalAmount: '',
 }
 
 export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
@@ -58,6 +60,7 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
         date: expense.date,
         category: expense.category,
         notes: expense.notes,
+        personalAmount: expense.personalAmount ? String(expense.personalAmount) : '',
       })
       if (expense.imageId) {
         const img = await getImage(expense.imageId)
@@ -137,6 +140,9 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
           imageId = undefined
         }
       }
+      // Clamped to [0, amount] — the personal portion can't exceed the
+      // expense's total or go negative.
+      const personalAmount = Math.min(amount, Math.max(0, parseFloat(draft.personalAmount) || 0))
       const expense: Expense = {
         id: existing?.id ?? newId(),
         reportId: existing?.reportId ?? reportId,
@@ -150,6 +156,7 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
         notes: draft.notes.trim(),
         imageId,
         createdAt: existing?.createdAt ?? Date.now(),
+        personalAmount,
       }
       await saveExpenseWithImage(expense, newImage, staleImageId)
       onDone()
@@ -270,6 +277,19 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
               placeholder="USD"
               value={draft.currency}
               onChange={(e) => set({ currency: e.target.value.toUpperCase() })}
+            />
+          </label>
+          <label className="field span-2">
+            <span>Personal amount (pay back to company)</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min="0"
+              max={draft.amount || undefined}
+              placeholder="0.00"
+              value={draft.personalAmount}
+              onChange={(e) => set({ personalAmount: e.target.value })}
             />
           </label>
           <label className="field">
