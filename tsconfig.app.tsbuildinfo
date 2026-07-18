@@ -1,1 +1,0 @@
-{"root":["./src/App.tsx","./src/db.ts","./src/image.ts","./src/main.tsx","./src/ocr.ts","./src/pdf.ts","./src/types.ts","./src/vite-env.d.ts","./src/components/ExpenseEditor.tsx","./src/components/ReportList.tsx","./src/components/ReportView.tsx"],"version":"5.9.3"}
