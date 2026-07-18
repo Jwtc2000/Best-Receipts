@@ -50,6 +50,26 @@ describe('validateBackup', () => {
     expect(() => validateBackup(validBackup({ app: 'some-other-app' }))).toThrow()
   })
 
+  it('accepts a report with a valid trip date range', async () => {
+    const { validateBackup } = await import('./backup')
+    const backup = validBackup({
+      reports: [{ id: 'r1', name: 'Trip', createdAt: 1, startDate: '2026-07-16', endDate: '2026-07-20' }],
+    })
+    const { reports } = validateBackup(backup)
+    expect(reports[0].startDate).toBe('2026-07-16')
+  })
+
+  it('rejects a report with a non-string startDate (regression)', async () => {
+    // A malformed startDate would otherwise crash dayNumbersByDate's date
+    // parsing the first time the report is opened.
+    const { validateBackup } = await import('./backup')
+    const bad = validBackup({
+      // @ts-expect-error intentionally malformed for the test
+      reports: [{ id: 'r1', name: 'Trip', createdAt: 1, startDate: 12345 }],
+    })
+    expect(() => validateBackup(bad)).toThrow(/malformed/i)
+  })
+
   it('rejects a malformed expense (non-numeric amount)', async () => {
     const { validateBackup } = await import('./backup')
     const bad = validBackup()

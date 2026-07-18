@@ -71,7 +71,7 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
-  const dayNumberByDate = dayNumbersByDate(expenses)
+  const dayNumberByDate = dayNumbersByDate(expenses, report.startDate)
   let previousDate: string | null = null
   expenses.forEach((e, i) => {
     const dayNumber = e.date ? dayNumberByDate.get(e.date) : undefined

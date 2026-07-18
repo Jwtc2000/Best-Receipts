@@ -36,7 +36,9 @@ function isValidReport(v: unknown): v is Report {
     v.id.length > 0 &&
     typeof v.name === 'string' &&
     typeof v.createdAt === 'number' &&
-    Number.isFinite(v.createdAt)
+    Number.isFinite(v.createdAt) &&
+    (v.startDate === undefined || typeof v.startDate === 'string') &&
+    (v.endDate === undefined || typeof v.endDate === 'string')
   )
 }
 

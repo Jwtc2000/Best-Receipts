@@ -63,3 +63,24 @@ describe('saveExpenseWithImage', () => {
     expect(await db.getExpense(expense.id)).toMatchObject({ imageId: image.id })
   })
 })
+
+describe('listExpenses', () => {
+  it('sorts by date rather than position', async () => {
+    const db = await import('./db')
+    await db.saveExpense(makeExpense({ id: 'later', date: '2026-07-20', position: 0 }))
+    await db.saveExpense(makeExpense({ id: 'earlier', date: '2026-07-18', position: 1 }))
+    const list = await db.listExpenses('report-1')
+    expect(list.map((e) => e.id)).toEqual(['earlier', 'later'])
+  })
+})
+
+describe('nextPosition', () => {
+  it('returns one past the highest position even when date-sort reorders the list (regression)', async () => {
+    const db = await import('./db')
+    // Position 5 sorts first here because its date is earlier, so a naive
+    // "last item in the sorted list" read would wrongly return 1 (0 + 1).
+    await db.saveExpense(makeExpense({ id: 'a', date: '2026-07-20', position: 0 }))
+    await db.saveExpense(makeExpense({ id: 'b', date: '2026-07-18', position: 5 }))
+    expect(await db.nextPosition('report-1')).toBe(6)
+  })
+})
