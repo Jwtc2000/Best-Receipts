@@ -3,6 +3,7 @@ import type { Report } from '../types'
 import { formatTotal, newId } from '../types'
 import { listReports, listExpenses, saveReport, deleteReport } from '../db'
 import { exportBackup, importBackup, lastBackupAt, backupIsStale } from '../backup'
+import { getProfile, saveProfile, type Profile } from '../profile'
 import Icon from './icons'
 
 interface ReportSummary {
@@ -19,7 +20,11 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
   const [backupNote, setBackupNote] = useState<string | null>(null)
   const [backupTick, setBackupTick] = useState(0)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [profile, setProfile] = useState<Profile>(() => getProfile())
   const restoreInput = useRef<HTMLInputElement>(null)
+
+  const setProfileField = (patch: Partial<Profile>) => setProfile((p) => ({ ...p, ...patch }))
+  const persistProfile = () => saveProfile(profile)
 
   const refresh = async () => {
     const reports = await listReports()
@@ -112,19 +117,67 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
               </button>
             </div>
 
-            <section className="drawer-section">
-              <h3>About</h3>
-              <p>
-                Receipts Express scans your receipts with on-device OCR, organizes them into expense
-                reports, and exports polished PDFs.
-              </p>
-              <p>
-                Everything stays on your device — receipts and reports are stored locally and are
-                never uploaded anywhere. Use the Backup card on the home screen to keep an
-                off-device copy.
-              </p>
-              <p className="muted">Version {__APP_VERSION__}</p>
-            </section>
+            <div className="drawer-section">
+              <section className="drawer-subsection">
+                <h3>Profile</h3>
+                <p className="muted">
+                  Optional — fill in what applies and it'll appear on the summary page of your PDF
+                  exports.
+                </p>
+                <div className="field-grid">
+                  <label className="field span-2">
+                    <span>Name</span>
+                    <input
+                      placeholder="Jane Doe"
+                      value={profile.name}
+                      onChange={(e) => setProfileField({ name: e.target.value })}
+                      onBlur={persistProfile}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Employee ID</span>
+                    <input
+                      placeholder="E12345"
+                      value={profile.employeeId}
+                      onChange={(e) => setProfileField({ employeeId: e.target.value })}
+                      onBlur={persistProfile}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Cost Center</span>
+                    <input
+                      placeholder="CC-100"
+                      value={profile.costCenter}
+                      onChange={(e) => setProfileField({ costCenter: e.target.value })}
+                      onBlur={persistProfile}
+                    />
+                  </label>
+                  <label className="field span-2">
+                    <span>Project Number</span>
+                    <input
+                      placeholder="PRJ-42"
+                      value={profile.projectNumber}
+                      onChange={(e) => setProfileField({ projectNumber: e.target.value })}
+                      onBlur={persistProfile}
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <section className="drawer-subsection">
+                <h3>About</h3>
+                <p>
+                  Receipts Express scans your receipts with on-device OCR, organizes them into expense
+                  reports, and exports polished PDFs.
+                </p>
+                <p>
+                  Everything stays on your device — receipts and reports are stored locally and are
+                  never uploaded anywhere. Use the Backup card on the home screen to keep an
+                  off-device copy.
+                </p>
+                <p className="muted">Version {__APP_VERSION__}</p>
+              </section>
+            </div>
 
             <footer className="drawer-footer">
               Assembled by Jordan WT Campbell with Claude Code

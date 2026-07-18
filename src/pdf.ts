@@ -3,6 +3,7 @@ import type { Report, Expense } from './types'
 import { formatMoney, formatTotal } from './types'
 import { getImage } from './db'
 import { blobToDataURL, imageDimensions } from './image'
+import { getProfile, profileSummaryLines } from './profile'
 
 const PAGE_W = 595.28 // A4 portrait, points
 const PAGE_H = 841.89
@@ -44,8 +45,20 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
     94,
   )
 
-  // Table header
+  // Optional profile attributes (name, employee ID, cost center, project
+  // number) — only takes up space on the page when at least one is set.
   let y = 150
+  const profileLine = profileSummaryLines(getProfile()).join('   ·   ')
+  if (profileLine) {
+    doc.setTextColor(...SLATE)
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+    const profileLines = doc.splitTextToSize(profileLine, PAGE_W - 2 * MARGIN) as string[]
+    doc.text(profileLines, MARGIN, 128)
+    y = 128 + profileLines.length * 11 + 22
+  }
+
+  // Table header
   const cols = { date: MARGIN, title: MARGIN + 90, category: MARGIN + 290, amount: PAGE_W - MARGIN }
   const drawTableHeader = () => {
     doc.setFillColor(...LIGHT)

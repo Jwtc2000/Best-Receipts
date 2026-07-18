@@ -7,6 +7,13 @@ bump `MAJOR` for breaking changes to stored data or backup format, `MINOR` for n
 user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About.
 
+## [1.2.0] - 2026-07-18
+
+### Added
+- A Profile section in the menu (Name, Employee ID, Cost Center, Project
+  Number) — all optional. Whatever's filled in now appears on the summary
+  page of every PDF export; the layout is unchanged if nothing is set.
+
 ## [1.1.0] - 2026-07-18
 
 ### Added
