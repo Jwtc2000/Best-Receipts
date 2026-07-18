@@ -1,8 +1,8 @@
-# Best Receipts 🧾
+# Receipts Express
 
 Scan receipts, organize expense reports, and export polished PDFs — all in your browser, all on your device.
 
-Best Receipts is a **Progressive Web App (PWA)**: it runs on iOS, Android, and desktop from a single codebase, can be installed to your home screen like a native app, and keeps working offline. No accounts, no servers — every receipt stays on your device.
+Receipts Express is a **Progressive Web App (PWA)**: it runs on iOS, Android, and desktop from a single codebase, can be installed to your home screen like a native app, and keeps working offline. No accounts, no servers — every receipt stays on your device.
 
 ## Features
 

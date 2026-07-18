@@ -78,6 +78,16 @@ body {
   align-items: center;
 }
 
+.topbar-title h1 {
+  flex: 0 0 auto;
+}
+
+.express-arrow {
+  display: inline-flex;
+  align-items: center;
+  color: #fdba74;
+}
+
 .report-title {
   cursor: pointer;
 }

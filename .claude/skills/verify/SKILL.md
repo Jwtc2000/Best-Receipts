@@ -1,11 +1,11 @@
 ---
 name: verify
-description: Build, run and drive Best Receipts end-to-end in headless Chromium
+description: Build, run and drive Receipts Express end-to-end in headless Chromium
 ---
 
-# Verifying Best Receipts
+# Verifying Receipts Express
 
-Best Receipts is a client-only React PWA (Vite). Surface = browser GUI.
+Receipts Express is a client-only React PWA (Vite). Surface = browser GUI.
 
 ## Build & serve
 

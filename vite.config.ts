@@ -3,8 +3,8 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  // GitHub Pages serves the app from /Best-Receipts/ — the deploy
-  // workflow sets BASE_PATH; local dev/build stays at the root.
+  // GitHub Pages serves a project site from /<repo>/ — the deploy workflow
+  // sets BASE_PATH from the repo name; local dev/build stays at the root.
   base: process.env.BASE_PATH ?? '/',
   plugins: [
     react(),
@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon.svg'],
       manifest: {
-        name: 'Best Receipts',
-        short_name: 'Best Receipts',
+        name: 'Receipts Express',
+        short_name: 'Receipts Express',
         description: 'Scan receipts, organize expense reports, export polished PDFs.',
         theme_color: '#0f766e',
         background_color: '#f8fafc',

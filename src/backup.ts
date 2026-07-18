@@ -2,8 +2,12 @@ import type { Report, Expense } from './types'
 import { listReports, listAllExpenses, listAllImages, saveReport, saveExpense, saveImage } from './db'
 import { blobToDataURL } from './image'
 
+const APP_ID = 'receipts-express'
+// Backups written before the rename carry the old id; still accepted on import.
+const LEGACY_APP_IDS = ['best-receipts']
+
 interface BackupFile {
-  app: 'best-receipts'
+  app: string
   version: 1
   exportedAt: string
   reports: Report[]
@@ -31,7 +35,7 @@ async function buildBackupBlob(): Promise<Blob> {
     listAllImages(),
   ])
   const backup: BackupFile = {
-    app: 'best-receipts',
+    app: APP_ID,
     version: 1,
     exportedAt: new Date().toISOString(),
     reports,
@@ -50,12 +54,12 @@ async function buildBackupBlob(): Promise<Blob> {
  */
 export async function exportBackup(): Promise<boolean> {
   const blob = await buildBackupBlob()
-  const name = `best-receipts-backup-${new Date().toISOString().slice(0, 10)}.json`
+  const name = `receipts-express-backup-${new Date().toISOString().slice(0, 10)}.json`
   const file = new File([blob], name, { type: 'application/json' })
 
   if (navigator.canShare?.({ files: [file] })) {
     try {
-      await navigator.share({ files: [file], title: 'Best Receipts backup' })
+      await navigator.share({ files: [file], title: 'Receipts Express backup' })
     } catch (err) {
       if ((err as DOMException).name === 'AbortError') return false
       throw err
@@ -79,8 +83,9 @@ export async function exportBackup(): Promise<boolean> {
  */
 export async function importBackup(file: File): Promise<{ reports: number; expenses: number }> {
   const parsed = JSON.parse(await file.text()) as BackupFile
-  if (parsed.app !== 'best-receipts' || !Array.isArray(parsed.reports)) {
-    throw new Error('Not a Best Receipts backup file')
+  const known = parsed.app === APP_ID || LEGACY_APP_IDS.includes(parsed.app)
+  if (!known || !Array.isArray(parsed.reports)) {
+    throw new Error('Not a Receipts Express backup file')
   }
   for (const image of parsed.images ?? []) {
     const blob = await (await fetch(image.dataUrl)).blob()

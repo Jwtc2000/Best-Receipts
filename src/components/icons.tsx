@@ -12,6 +12,7 @@ export type IconName =
   | 'menu'
   | 'close'
   | 'warning'
+  | 'express-arrow'
 
 const PATHS: Record<IconName, ReactNode> = {
   receipt: (
@@ -69,6 +70,15 @@ const PATHS: Record<IconName, ReactNode> = {
       <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
       <line x1="12" y1="9" x2="12" y2="13" />
       <line x1="12" y1="17" x2="12.01" y2="17" />
+    </>
+  ),
+  // A forward-aiming arrow with trailing speed lines — the "express" mark.
+  'express-arrow': (
+    <>
+      <line x1="4" y1="12" x2="19" y2="12" />
+      <polyline points="13 6 19 12 13 18" />
+      <line x1="1" y1="7" x2="6" y2="7" />
+      <line x1="1" y1="17" x2="6" y2="17" />
     </>
   ),
 }

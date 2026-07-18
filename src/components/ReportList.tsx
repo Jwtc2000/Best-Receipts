@@ -74,7 +74,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
       setBackupNote(`Restored ${reports} report${reports === 1 ? '' : 's'}, ${expenses} expense${expenses === 1 ? '' : 's'}`)
       await refresh()
     } catch {
-      setBackupNote("Couldn't read that file — is it a Best Receipts backup?")
+      setBackupNote("Couldn't read that file — is it a Receipts Express backup?")
     } finally {
       setBackupBusy(false)
       if (restoreInput.current) restoreInput.current.value = ''
@@ -94,7 +94,10 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
           <span className="logo">
             <Icon name="receipt" size={24} />
           </span>
-          <h1>Best Receipts</h1>
+          <h1>Receipts Express</h1>
+          <span className="express-arrow">
+            <Icon name="express-arrow" size={26} />
+          </span>
         </div>
         <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => setMenuOpen(true)}>
           <Icon name="menu" size={22} />
@@ -114,7 +117,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
             <section className="drawer-section">
               <h3>About</h3>
               <p>
-                Best Receipts scans your receipts with on-device OCR, organizes them into expense
+                Receipts Express scans your receipts with on-device OCR, organizes them into expense
                 reports, and exports polished PDFs.
               </p>
               <p>

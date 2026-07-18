@@ -28,7 +28,9 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          BASE_PATH: /Best-Receipts/
+          # Derived from the repo name so the base path stays correct if the
+          # repository is renamed (GitHub Pages serves project sites at /<repo>/).
+          BASE_PATH: /${{ github.event.repository.name }}/
       - uses: actions/configure-pages@v5
         with:
           enablement: true
