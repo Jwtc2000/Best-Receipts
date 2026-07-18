@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf'
 import type { Report, Expense } from './types'
-import { formatMoney, formatTotal } from './types'
+import { formatMoney, formatTotal, formatDate, dayNumbersByDate } from './types'
 import { getImage } from './db'
 import { blobToDataURL, imageDimensions } from './image'
 import { getProfile, profileSummaryLines } from './profile'
@@ -12,13 +12,8 @@ const MARGIN = 48
 const TEAL: [number, number, number] = [15, 118, 110]
 const SLATE: [number, number, number] = [51, 65, 85]
 const LIGHT: [number, number, number] = [241, 245, 249]
-
-function formatDate(iso: string): string {
-  if (!iso) return '—'
-  const [y, m, d] = iso.split('-').map(Number)
-  const date = new Date(y, m - 1, d)
-  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
-}
+const PURPLE_LIGHT: [number, number, number] = [237, 233, 254]
+const PURPLE_DARK: [number, number, number] = [109, 40, 217]
 
 /**
  * Build the report PDF: a summary page with every expense and the grand
@@ -76,14 +71,34 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
 
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
+  const dayNumberByDate = dayNumbersByDate(expenses)
+  let previousDate: string | null = null
   expenses.forEach((e, i) => {
-    if (y > PAGE_H - 110) {
+    const dayNumber = e.date ? dayNumberByDate.get(e.date) : undefined
+    const needsDayDivider = dayNumber !== undefined && e.date !== previousDate
+    if (e.date) previousDate = e.date
+
+    if (y + (needsDayDivider ? 20 : 0) > PAGE_H - 110) {
       doc.addPage()
       y = MARGIN + 14
       drawTableHeader()
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(10)
     }
+
+    if (needsDayDivider) {
+      doc.setFillColor(...PURPLE_LIGHT)
+      doc.rect(MARGIN - 8, y - 14, PAGE_W - 2 * (MARGIN - 8), 20, 'F')
+      doc.setTextColor(...PURPLE_DARK)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.text(`DAY ${dayNumber}`, cols.date, y)
+      doc.text(formatDate(e.date), cols.title, y)
+      y += 20
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(10)
+    }
+
     if (i % 2 === 1) {
       doc.setFillColor(250, 250, 250)
       doc.rect(MARGIN - 8, y - 12, PAGE_W - 2 * (MARGIN - 8), 20, 'F')

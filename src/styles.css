@@ -499,6 +499,30 @@ body {
   flex-direction: column;
 }
 
+.day-divider {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 14px;
+  margin: 4px 0 14px;
+  background: var(--purple-light);
+  border-radius: 10px;
+}
+
+.day-divider-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--purple-dark);
+}
+
+.day-divider-date {
+  font-size: 0.82rem;
+  color: var(--purple-dark);
+  opacity: 0.75;
+}
+
 .timeline-item {
   display: flex;
   gap: 12px;

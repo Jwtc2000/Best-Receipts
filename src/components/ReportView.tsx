@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import type { Report, Expense } from '../types'
-import { formatMoney, formatTotal } from '../types'
+import { formatMoney, formatTotal, formatDate, dayNumbersByDate } from '../types'
 import {
   getReport,
   saveReport,
@@ -93,6 +93,23 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   const toggleSearch = () => {
     if (searchOpen) setSearchQuery('')
     setSearchOpen((v) => !v)
+  }
+
+  // ---- Day grouping ----
+  // "Day N" is the chronological rank of an expense's calendar date across
+  // the whole report, so it stays correct regardless of manual reordering
+  // or search filtering. A divider is shown above the first visible
+  // expense of each date.
+
+  const dayNumberByDate = dayNumbersByDate(expenses)
+  const dayDividerAt = new Set<number>()
+  {
+    let previousDate: string | null = null
+    for (const i of visibleIndices) {
+      const date = expenses[i].date
+      if (date && dayNumberByDate.has(date) && date !== previousDate) dayDividerAt.add(i)
+      if (date) previousDate = date
+    }
   }
 
   // ---- Reordering ----
@@ -280,9 +297,16 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
           <ol className="timeline">
             {expenses.map((expense, index) => {
               if (searching && !expenseMatches(expense, query)) return null
+              const dayNumber = dayDividerAt.has(index) ? dayNumberByDate.get(expense.date) : undefined
               return (
+              <Fragment key={expense.id}>
+              {dayNumber !== undefined && (
+                <li className="day-divider">
+                  <span className="day-divider-label">Day {dayNumber}</span>
+                  <span className="day-divider-date">{formatDate(expense.date)}</span>
+                </li>
+              )}
               <li
-                key={expense.id}
                 className="timeline-item"
                 draggable={!searching}
                 onDragStart={() => {
@@ -358,6 +382,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                   )}
                 </div>
               </li>
+              </Fragment>
               )
             })}
           </ol>
