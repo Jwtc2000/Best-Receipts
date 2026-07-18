@@ -64,3 +64,23 @@ export function formatTotal(expenses: { amount: number; currency: string }[]): s
 export function newId(): string {
   return crypto.randomUUID()
 }
+
+export function formatDate(iso: string): string {
+  if (!iso) return '—'
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+/**
+ * Rank each distinct expense date chronologically across the whole report,
+ * so "Day 1" is always the earliest calendar date, "Day 2" the next, and
+ * so on — regardless of the expenses' display/position order. Expenses
+ * with no date aren't given a day number.
+ */
+export function dayNumbersByDate(expenses: { date: string }[]): Map<string, number> {
+  const uniqueDates = [...new Set(expenses.map((e) => e.date).filter(Boolean))].sort()
+  const map = new Map<string, number>()
+  uniqueDates.forEach((date, i) => map.set(date, i + 1))
+  return map
+}

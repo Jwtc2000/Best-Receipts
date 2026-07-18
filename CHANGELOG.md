@@ -7,6 +7,15 @@ bump `MAJOR` for breaking changes to stored data or backup format, `MINOR` for n
 user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About.
 
+## [1.5.0] - 2026-07-18
+
+### Added
+- Multi-day trips now show a "Day 1", "Day 2", … divider bar in the
+  report timeline, grouping expenses by calendar date (ranked
+  chronologically regardless of manual reorder order) for easier
+  visual scanning. The same Day N grouping now appears in the PDF
+  export's summary table.
+
 ## [1.4.0] - 2026-07-18
 
 ### Added
