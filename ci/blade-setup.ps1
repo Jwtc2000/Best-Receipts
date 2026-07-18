@@ -32,14 +32,14 @@ Write-Host "[1/6] Creating docker network 'jenkins'..." -ForegroundColor Cyan
 docker network create jenkins
 
 # --- (2) Run the Jenkins controller -----------------------------------------
-Write-Host "[2/6] Starting Jenkins controller container 'jenkins' (jenkins/jenkins:lts-jdk17)..." -ForegroundColor Cyan
+Write-Host "[2/6] Starting Jenkins controller container 'jenkins' (jenkins/jenkins:lts-jdk21)..." -ForegroundColor Cyan
 docker run -d `
     --name jenkins `
     --restart no `
     --network jenkins `
     -p 8080:8080 `
     -v jenkins_home:/var/jenkins_home `
-    jenkins/jenkins:lts-jdk17
+    jenkins/jenkins:lts-jdk21
 
 # --- (3) Windows Firewall rules ---------------------------------------------
 Write-Host "[3/6] Configuring Windows Firewall for TCP 8080..." -ForegroundColor Cyan
