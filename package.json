@@ -4,6 +4,9 @@
   "version": "1.9.0",
   "description": "Scan receipts, organize expense reports, export polished PDFs.",
   "type": "module",
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
     "prepare-assets": "node scripts/copy-tesseract-assets.mjs",
     "predev": "npm run prepare-assets",
