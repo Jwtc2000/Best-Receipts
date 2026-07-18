@@ -123,7 +123,7 @@ export default function ReportList({ onOpenReport }: { onOpenReport: (id: string
                 never uploaded anywhere. Use the Backup card on the home screen to keep an
                 off-device copy.
               </p>
-              <p className="muted">Version 1.0.0</p>
+              <p className="muted">Version {__APP_VERSION__}</p>
             </section>
 
             <footer className="drawer-footer">

@@ -16,9 +16,11 @@ Receipts Express is a **Progressive Web App (PWA)**: it runs on iOS, Android, an
 
 ```bash
 npm install
-npm run dev       # local dev server
-npm run build     # production build in dist/
-npm run preview   # serve the production build
+npm run dev        # local dev server
+npm run build      # production build in dist/
+npm run preview    # serve the production build
+npm run typecheck  # tsc, no emit
+npm test           # vitest
 ```
 
 Open the dev server URL on your phone (same network) or deploy `dist/` to any static host (Netlify, Vercel, GitHub Pages, …). **Camera access requires HTTPS** (or localhost), so use a proper host or a tunneling tool when testing on a phone.
@@ -39,3 +41,9 @@ Open the dev server URL on your phone (same network) or deploy `dist/` to any st
 | Offline / installable | vite-plugin-pwa service worker + web manifest |
 
 The OCR engine (worker, WASM core, English language data) is **self-hosted**: `npm run build`/`npm run dev` copy it from `node_modules` into `public/tesseract/` automatically, so the app never calls a CDN and scanning works fully offline once the app has loaded.
+
+## Versioning
+
+The app's version lives in `package.json` (semver) and is shown in the app under
+Menu → About. See [CHANGELOG.md](./CHANGELOG.md) for release notes — bump the
+version there whenever a change lands on `main`.

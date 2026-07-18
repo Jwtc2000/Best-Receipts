@@ -1,11 +1,21 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+
+// package.json's "version" is the single source of truth for the app's
+// version — bump it there (semver) and it flows into the build and the
+// in-app About menu automatically.
+const pkg = JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8'))
 
 export default defineConfig({
   // GitHub Pages serves a project site from /<repo>/ — the deploy workflow
   // sets BASE_PATH from the repo name; local dev/build stays at the root.
   base: process.env.BASE_PATH ?? '/',
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     react(),
     VitePWA({
