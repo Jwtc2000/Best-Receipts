@@ -70,6 +70,36 @@ describe('validateBackup', () => {
     expect(() => validateBackup(bad)).toThrow(/malformed/i)
   })
 
+  it('accepts a report with a valid daily meal allowance', async () => {
+    const { validateBackup } = await import('./backup')
+    const backup = validBackup({
+      reports: [{ id: 'r1', name: 'Trip', createdAt: 1, dailyMealAllowance: 50 }],
+    })
+    const { reports } = validateBackup(backup)
+    expect(reports[0].dailyMealAllowance).toBe(50)
+  })
+
+  it('rejects a report with a non-numeric dailyMealAllowance (regression)', async () => {
+    // A malformed allowance would otherwise crash foodBalanceForDate's
+    // arithmetic the first time the report is opened.
+    const { validateBackup } = await import('./backup')
+    const bad = validBackup({
+      // @ts-expect-error intentionally malformed for the test
+      reports: [{ id: 'r1', name: 'Trip', createdAt: 1, dailyMealAllowance: '50' }],
+    })
+    expect(() => validateBackup(bad)).toThrow(/malformed/i)
+  })
+
+  it('rejects an expense with a non-numeric personalAmount (regression)', async () => {
+    // A malformed personalAmount would otherwise crash businessAmount's
+    // subtraction the first time totals are computed.
+    const { validateBackup } = await import('./backup')
+    const bad = validBackup()
+    // @ts-expect-error intentionally malformed for the test
+    bad.expenses[0].personalAmount = 'five'
+    expect(() => validateBackup(bad)).toThrow(/malformed/i)
+  })
+
   it('rejects a malformed expense (non-numeric amount)', async () => {
     const { validateBackup } = await import('./backup')
     const bad = validBackup()

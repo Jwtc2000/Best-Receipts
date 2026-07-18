@@ -502,6 +502,16 @@ body {
   font-size: 1.1rem;
 }
 
+.report-payback-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--orange-light);
+  color: #9a3412;
+  font-size: 0.85rem;
+}
+
 /* ---- Timeline ---- */
 
 .timeline {
@@ -515,11 +525,17 @@ body {
      src/colors.ts dayColor/contrastText) so each day gets a distinct,
      contrast-checked color matching the PDF export. */
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  gap: 3px;
   padding: 8px 14px;
   margin: 4px 0 14px;
   border-radius: 10px;
+}
+
+.day-divider-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .day-divider-label {
@@ -532,6 +548,15 @@ body {
 .day-divider-date {
   font-size: 0.82rem;
   opacity: 0.85;
+}
+
+.day-divider-food {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  opacity: 0.95;
 }
 
 .timeline-item {

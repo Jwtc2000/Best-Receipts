@@ -5,6 +5,7 @@ import { getImage } from './db'
 import { blobToDataURL, imageDimensions } from './image'
 import { getProfile, profileSummaryLines } from './profile'
 import { dayColor, contrastText } from './colors'
+import { foodBalanceForDate, formatFoodBalance, formatPersonalTotal } from './mealAllowance'
 
 const PAGE_W = 595.28 // A4 portrait, points
 const PAGE_H = 841.89
@@ -14,6 +15,9 @@ const TEAL: [number, number, number] = [15, 118, 110]
 const SLATE: [number, number, number] = [51, 65, 85]
 const LIGHT: [number, number, number] = [241, 245, 249]
 const MUTED_GRAY: [number, number, number] = [163, 163, 163]
+const PAYBACK_ORANGE: [number, number, number] = [180, 83, 9]
+const BUN: [number, number, number] = [217, 119, 6]
+const PATTY: [number, number, number] = [120, 53, 15]
 
 /** A "no receipt" glyph — a crossed-out circle, drawn with jsPDF's vector
  * primitives rather than a raster asset so it stays crisp at any size. */
@@ -23,6 +27,25 @@ function drawNoReceiptIcon(doc: jsPDF, cx: number, cy: number, radius: number): 
   doc.circle(cx, cy, radius, 'S')
   const d = radius * Math.SQRT1_2
   doc.line(cx - d, cy + d, cx + d, cy - d)
+}
+
+/** A small burger glyph (bun/patty/bun) marking Meals-category rows,
+ * drawn with jsPDF's vector primitives rather than a raster asset. */
+function drawMealIcon(doc: jsPDF, cx: number, cy: number, size: number): void {
+  const w = size
+  const h = size * 0.72
+  const x = cx - w / 2
+  const barH = h * 0.3
+  const gap = h * 0.1
+  let yy = cy - h / 2
+  doc.setFillColor(...BUN)
+  doc.roundedRect(x, yy, w, barH, barH / 2, barH / 2, 'F')
+  yy += barH + gap
+  doc.setFillColor(...PATTY)
+  doc.rect(x, yy, w, barH * 0.7, 'F')
+  yy += barH * 0.7 + gap
+  doc.setFillColor(...BUN)
+  doc.roundedRect(x, yy, w, barH, barH / 2, barH / 2, 'F')
 }
 
 /**
@@ -64,7 +87,13 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
   }
 
   // Table header
-  const cols = { date: MARGIN, title: MARGIN + 90, category: MARGIN + 290, amount: PAGE_W - MARGIN }
+  const cols = {
+    date: MARGIN,
+    title: MARGIN + 90,
+    category: MARGIN + 255,
+    payback: MARGIN + 415,
+    amount: PAGE_W - MARGIN,
+  }
   const drawTableHeader = () => {
     doc.setFillColor(...LIGHT)
     doc.rect(MARGIN - 8, y - 14, PAGE_W - 2 * (MARGIN - 8), 22, 'F')
@@ -74,6 +103,7 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
     doc.text('DATE', cols.date, y)
     doc.text('EXPENSE', cols.title, y)
     doc.text('CATEGORY', cols.category, y)
+    doc.text('PAY BACK', cols.payback, y, { align: 'right' })
     doc.text('AMOUNT', cols.amount, y, { align: 'right' })
     y += 24
   }
@@ -87,8 +117,13 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
     const dayNumber = e.date ? dayNumberByDate.get(e.date) : undefined
     const needsDayDivider = dayNumber !== undefined && e.date !== previousDate
     if (e.date) previousDate = e.date
+    const foodBalance =
+      needsDayDivider && dayNumber !== undefined && report.dailyMealAllowance
+        ? foodBalanceForDate(expenses, e.date, report.dailyMealAllowance)
+        : null
+    const dividerH = needsDayDivider ? (foodBalance ? 32 : 20) : 0
 
-    if (y + (needsDayDivider ? 20 : 0) > PAGE_H - 110) {
+    if (y + dividerH > PAGE_H - 110) {
       doc.addPage()
       y = MARGIN + 14
       drawTableHeader()
@@ -99,13 +134,18 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
     if (needsDayDivider) {
       const bg = dayColor(dayNumber)
       doc.setFillColor(...bg)
-      doc.rect(MARGIN - 8, y - 14, PAGE_W - 2 * (MARGIN - 8), 20, 'F')
+      doc.rect(MARGIN - 8, y - 14, PAGE_W - 2 * (MARGIN - 8), dividerH, 'F')
       doc.setTextColor(...contrastText(bg))
       doc.setFont('helvetica', 'bold')
       doc.setFontSize(9)
       doc.text(`DAY ${dayNumber}`, cols.date, y)
       doc.text(formatDate(e.date), cols.title, y)
-      y += 20
+      if (foodBalance) {
+        doc.setFont('helvetica', 'normal')
+        doc.setFontSize(8)
+        doc.text(formatFoodBalance(foodBalance), cols.date, y + 13)
+      }
+      y += dividerH
       doc.setFont('helvetica', 'normal')
       doc.setFontSize(10)
     }
@@ -116,10 +156,13 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
     }
     doc.setTextColor(...SLATE)
     doc.text(formatDate(e.date), cols.date, y)
-    if (!e.imageId) drawNoReceiptIcon(doc, cols.title - 10, y - 3, 4)
+    if (e.category === 'Meals') drawMealIcon(doc, cols.title - 20, y - 3, 8)
+    if (!e.imageId) drawNoReceiptIcon(doc, cols.title - 9, y - 3, 3.5)
     const title = e.title || e.merchant || 'Untitled expense'
-    doc.text(doc.splitTextToSize(title, 190)[0] ?? '', cols.title, y)
+    doc.text(doc.splitTextToSize(title, 155)[0] ?? '', cols.title, y)
     doc.text(e.category, cols.category, y)
+    const payback = e.personalAmount && e.personalAmount > 0 ? formatMoney(e.personalAmount, e.currency) : '—'
+    doc.text(payback, cols.payback, y, { align: 'right' })
     doc.text(formatMoney(e.amount, e.currency), cols.amount, y, { align: 'right' })
     y += 20
   })
@@ -135,6 +178,15 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
   doc.setTextColor(...TEAL)
   doc.text('TOTAL', cols.title, y)
   doc.text(totalDisplay, cols.amount, y, { align: 'right' })
+
+  const personalTotal = formatPersonalTotal(expenses)
+  if (personalTotal) {
+    y += 20
+    doc.setFontSize(11)
+    doc.setTextColor(...PAYBACK_ORANGE)
+    doc.text('Employee pays credit card company', cols.title, y)
+    doc.text(personalTotal, cols.amount, y, { align: 'right' })
+  }
 
   // ---------- One page per receipt ----------
   for (const [index, expense] of expenses.entries()) {
@@ -152,9 +204,13 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
 
     // Day banner, matching the summary table's day dividers
     const dayNumber = expense.date ? dayNumberByDate.get(expense.date) : undefined
+    const pageFoodBalance =
+      dayNumber !== undefined && report.dailyMealAllowance
+        ? foodBalanceForDate(expenses, expense.date, report.dailyMealAllowance)
+        : null
     let contentTop = 56
     if (dayNumber !== undefined) {
-      const bannerH = 20
+      const bannerH = pageFoodBalance ? 32 : 20
       const bg = dayColor(dayNumber)
       doc.setFillColor(...bg)
       doc.rect(0, 40, PAGE_W, bannerH, 'F')
@@ -164,6 +220,10 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
       doc.text(`DAY ${dayNumber}`, MARGIN, 40 + 14)
       doc.setFont('helvetica', 'normal')
       doc.text(formatDate(expense.date), MARGIN + 55, 40 + 14)
+      if (pageFoodBalance) {
+        doc.setFontSize(8)
+        doc.text(formatFoodBalance(pageFoodBalance), MARGIN, 40 + 26)
+      }
       contentTop = 40 + bannerH + 16
     }
 
