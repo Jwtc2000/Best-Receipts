@@ -22,14 +22,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
-      # Informational only: report known advisories without blocking CI on
-      # issues that aren't fixed yet (see README/audit notes for tracking).
-      - run: npm audit --audit-level=critical || true
+      - run: npm audit --audit-level=high
 
   build:
     needs: test
@@ -43,7 +41,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 26
           cache: npm
       - run: npm ci
       - run: npm run build
