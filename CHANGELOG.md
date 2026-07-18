@@ -7,6 +7,24 @@ bump `MAJOR` for breaking changes to stored data or backup format, `MINOR` for n
 user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About.
 
+## [1.4.0] - 2026-07-18
+
+### Added
+- CSV export, alongside PDF: the "Export" button in a report now opens a
+  menu to choose PDF or CSV. The CSV is a plain Date/Title/Merchant/
+  Category/Amount/Currency/Notes table, one row per expense, that opens
+  directly in Excel/Sheets/accounting tools.
+
+## [1.3.0] - 2026-07-18
+
+### Added
+- A search box on the main reports screen finds expenses across every
+  report by title, merchant, or amount, and jumps straight into the
+  matching expense when tapped.
+- A search box within a report filters that report's expense list the
+  same way (title, merchant, amount), without changing the report's
+  totals.
+
 ## [1.2.0] - 2026-07-18
 
 ### Added

@@ -13,6 +13,8 @@ import {
   nextPosition,
 } from '../db'
 import { exportReportPdf } from '../pdf'
+import { exportReportCsv } from '../csv'
+import { expenseMatches } from '../search'
 import Icon from './icons'
 
 interface Props {
@@ -28,9 +30,12 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   const [thumbs, setThumbs] = useState<Map<string, string>>(new Map())
   const [otherReports, setOtherReports] = useState<Report[]>([])
   const [movingId, setMovingId] = useState<string | null>(null)
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null)
+  const [exportMenuOpen, setExportMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const dragIndex = useRef<number | null>(null)
   const thumbsRef = useRef<Map<string, string>>(new Map())
 
@@ -75,6 +80,21 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
 
   const totalDisplay = formatTotal(expenses)
 
+  // ---- Search ----
+
+  const query = searchQuery.trim()
+  const searching = searchOpen && query.length > 0
+  const visibleIndices: number[] = []
+  expenses.forEach((e, i) => {
+    if (!searching || expenseMatches(e, query)) visibleIndices.push(i)
+  })
+  const lastVisibleIndex = visibleIndices[visibleIndices.length - 1]
+
+  const toggleSearch = () => {
+    if (searchOpen) setSearchQuery('')
+    setSearchOpen((v) => !v)
+  }
+
   // ---- Reordering ----
 
   const persistOrder = async (list: Expense[]) => {
@@ -116,13 +136,25 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
     await refresh()
   }
 
-  const doExport = async () => {
+  const doExportPdf = async () => {
     if (!report || expenses.length === 0) return
-    setExporting(true)
+    setExportMenuOpen(false)
+    setExporting('pdf')
     try {
       await exportReportPdf(report, expenses)
     } finally {
-      setExporting(false)
+      setExporting(null)
+    }
+  }
+
+  const doExportCsv = async () => {
+    if (!report || expenses.length === 0) return
+    setExportMenuOpen(false)
+    setExporting('csv')
+    try {
+      await exportReportCsv(report, expenses)
+    } finally {
+      setExporting(null)
     }
   }
 
@@ -166,18 +198,63 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
             {report.name}
           </h1>
         )}
-        <button
-          className="btn primary small"
-          onClick={() => void doExport()}
-          disabled={exporting || expenses.length === 0}
-        >
-          {exporting ? 'Exporting…' : 'Export PDF'}
-        </button>
+        {expenses.length > 0 && (
+          <button
+            className="icon-btn"
+            aria-label={searchOpen ? 'Close search' : 'Search expenses'}
+            onClick={toggleSearch}
+          >
+            <Icon name={searchOpen ? 'close' : 'search'} size={20} />
+          </button>
+        )}
+        <div className="export-menu-wrap">
+          <button
+            className="btn primary small"
+            onClick={() => setExportMenuOpen((v) => !v)}
+            disabled={exporting !== null || expenses.length === 0}
+          >
+            {exporting === 'pdf' ? 'Exporting PDF…' : exporting === 'csv' ? 'Exporting CSV…' : 'Export'}
+          </button>
+          {exportMenuOpen && (
+            <>
+              <div className="export-menu-backdrop" onClick={() => setExportMenuOpen(false)} />
+              <div className="export-menu">
+                <button className="btn ghost small" onClick={() => void doExportPdf()}>
+                  Export as PDF
+                </button>
+                <button className="btn ghost small" onClick={() => void doExportCsv()}>
+                  Export as CSV
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </header>
+
+      {searchOpen && (
+        <div className="search-bar">
+          <Icon name="search" size={16} />
+          <input
+            autoFocus
+            type="text"
+            inputMode="search"
+            placeholder="Search title, merchant, or amount…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button className="icon-btn" aria-label="Clear search" onClick={() => setSearchQuery('')}>
+              <Icon name="close" size={14} />
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="report-summary-bar">
         <span>
-          {expenses.length} expense{expenses.length === 1 ? '' : 's'}
+          {searching
+            ? `${visibleIndices.length} of ${expenses.length} match${expenses.length === 1 ? '' : 'es'}`
+            : `${expenses.length} expense${expenses.length === 1 ? '' : 's'}`}
         </span>
         <strong>{totalDisplay}</strong>
       </div>
@@ -191,13 +268,23 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
             <h2>No expenses yet</h2>
             <p className="muted">Scan your first receipt to get started.</p>
           </div>
+        ) : searching && visibleIndices.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              <Icon name="search" size={52} />
+            </div>
+            <h2>No matches</h2>
+            <p className="muted">Try a different title, merchant, or amount.</p>
+          </div>
         ) : (
           <ol className="timeline">
-            {expenses.map((expense, index) => (
+            {expenses.map((expense, index) => {
+              if (searching && !expenseMatches(expense, query)) return null
+              return (
               <li
                 key={expense.id}
                 className="timeline-item"
-                draggable
+                draggable={!searching}
                 onDragStart={() => {
                   dragIndex.current = index
                 }}
@@ -206,7 +293,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
               >
                 <div className="timeline-marker">
                   <span className="timeline-dot" />
-                  {index < expenses.length - 1 && <span className="timeline-line" />}
+                  {index !== lastVisibleIndex && <span className="timeline-line" />}
                 </div>
 
                 <div className="expense-card">
@@ -230,17 +317,21 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                   </div>
 
                   <div className="expense-actions">
-                    <button className="icon-btn" onClick={() => moveBy(index, -1)} disabled={index === 0} aria-label="Move up">
-                      <Icon name="chevron-up" size={18} />
-                    </button>
-                    <button
-                      className="icon-btn"
-                      onClick={() => moveBy(index, 1)}
-                      disabled={index === expenses.length - 1}
-                      aria-label="Move down"
-                    >
-                      <Icon name="chevron-down" size={18} />
-                    </button>
+                    {!searching && (
+                      <>
+                        <button className="icon-btn" onClick={() => moveBy(index, -1)} disabled={index === 0} aria-label="Move up">
+                          <Icon name="chevron-up" size={18} />
+                        </button>
+                        <button
+                          className="icon-btn"
+                          onClick={() => moveBy(index, 1)}
+                          disabled={index === expenses.length - 1}
+                          aria-label="Move down"
+                        >
+                          <Icon name="chevron-down" size={18} />
+                        </button>
+                      </>
+                    )}
                     {otherReports.length > 0 && (
                       <button
                         className="icon-btn"
@@ -267,7 +358,8 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                   )}
                 </div>
               </li>
-            ))}
+              )
+            })}
           </ol>
         )}
 

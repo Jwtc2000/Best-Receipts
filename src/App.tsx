@@ -14,7 +14,10 @@ export default function App() {
   return (
     <div className="app">
       {view.name === 'reports' && (
-        <ReportList onOpenReport={(reportId) => setView({ name: 'report', reportId })} />
+        <ReportList
+          onOpenReport={(reportId) => setView({ name: 'report', reportId })}
+          onEditExpense={(reportId, expenseId) => setView({ name: 'expense', reportId, expenseId })}
+        />
       )}
       {view.name === 'report' && (
         <ReportView
