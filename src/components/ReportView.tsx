@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Report, Expense } from '../types'
-import { formatMoney } from '../types'
+import { formatMoney, formatTotal } from '../types'
 import {
   getReport,
   saveReport,
@@ -73,8 +73,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportId])
 
-  const total = expenses.reduce((s, e) => s + e.amount, 0)
-  const currency = expenses[0]?.currency ?? 'USD'
+  const totalDisplay = formatTotal(expenses)
 
   // ---- Reordering ----
 
@@ -180,7 +179,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
         <span>
           {expenses.length} expense{expenses.length === 1 ? '' : 's'}
         </span>
-        <strong>{formatMoney(total, currency)}</strong>
+        <strong>{totalDisplay}</strong>
       </div>
 
       <main className="content">

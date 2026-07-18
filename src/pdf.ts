@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf'
 import type { Report, Expense } from './types'
-import { formatMoney } from './types'
+import { formatMoney, formatTotal } from './types'
 import { getImage } from './db'
 import { blobToDataURL, imageDimensions } from './image'
 
@@ -25,8 +25,7 @@ function formatDate(iso: string): string {
  */
 export async function exportReportPdf(report: Report, expenses: Expense[]): Promise<void> {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-  const currency = expenses[0]?.currency ?? 'USD'
-  const total = expenses.reduce((sum, e) => sum + e.amount, 0)
+  const totalDisplay = formatTotal(expenses)
 
   // ---------- Summary page ----------
   doc.setFillColor(...TEAL)
@@ -95,7 +94,7 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
   doc.setFontSize(13)
   doc.setTextColor(...TEAL)
   doc.text('TOTAL', cols.title, y)
-  doc.text(formatMoney(total, currency), cols.amount, y, { align: 'right' })
+  doc.text(totalDisplay, cols.amount, y, { align: 'right' })
 
   // ---------- One page per receipt ----------
   for (const [index, expense] of expenses.entries()) {

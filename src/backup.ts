@@ -1,18 +1,130 @@
-import type { Report, Expense } from './types'
-import { listReports, listAllExpenses, listAllImages, saveReport, saveExpense, saveImage } from './db'
+import type { Report, Expense, ReceiptImage } from './types'
+import { listReports, listAllExpenses, listAllImages, importBackupData } from './db'
 import { blobToDataURL } from './image'
 
 const APP_ID = 'receipts-express'
 // Backups written before the rename carry the old id; still accepted on import.
 const LEGACY_APP_IDS = ['best-receipts']
 
-interface BackupFile {
+export interface BackupFile {
   app: string
   version: 1
   exportedAt: string
   reports: Report[]
   expenses: Expense[]
   images: { id: string; dataUrl: string }[]
+}
+
+// Only ever decode embedded base64 image data — never fetch a URL from the
+// backup file. That's what keeps "nothing leaves your device" true even for
+// a hostile/corrupted backup: a crafted `dataUrl` can't turn into an outbound
+// network request.
+const DATA_URL_RE = /^data:image\/(png|jpeg|jpg|webp|gif);base64,([a-zA-Z0-9+/]+=?=?)$/
+const MAX_IMAGE_BYTES = 15 * 1024 * 1024 // generous ceiling for one receipt photo
+const MAX_IMAGES = 5000
+const MAX_TOTAL_IMAGE_BYTES = 500 * 1024 * 1024
+
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
+}
+
+function isValidReport(v: unknown): v is Report {
+  return (
+    isPlainObject(v) &&
+    typeof v.id === 'string' &&
+    v.id.length > 0 &&
+    typeof v.name === 'string' &&
+    typeof v.createdAt === 'number' &&
+    Number.isFinite(v.createdAt)
+  )
+}
+
+function isValidExpense(v: unknown): v is Expense {
+  return (
+    isPlainObject(v) &&
+    typeof v.id === 'string' &&
+    v.id.length > 0 &&
+    typeof v.reportId === 'string' &&
+    v.reportId.length > 0 &&
+    typeof v.position === 'number' &&
+    Number.isFinite(v.position) &&
+    typeof v.title === 'string' &&
+    typeof v.merchant === 'string' &&
+    typeof v.amount === 'number' &&
+    Number.isFinite(v.amount) &&
+    typeof v.currency === 'string' &&
+    typeof v.date === 'string' &&
+    typeof v.category === 'string' &&
+    typeof v.notes === 'string' &&
+    (v.imageId === undefined || typeof v.imageId === 'string') &&
+    typeof v.createdAt === 'number' &&
+    Number.isFinite(v.createdAt)
+  )
+}
+
+function decodeBackupImage(raw: unknown, index: number): ReceiptImage {
+  if (!isPlainObject(raw) || typeof raw.id !== 'string' || !raw.id) {
+    throw new Error(`Backup image #${index} is missing an id`)
+  }
+  if (typeof raw.dataUrl !== 'string') {
+    throw new Error(`Backup image "${raw.id}" is missing its image data`)
+  }
+  const match = DATA_URL_RE.exec(raw.dataUrl)
+  if (!match) {
+    throw new Error(`Backup image "${raw.id}" is not an embedded image data URL`)
+  }
+  const base64 = match[2]
+  const approxBytes = Math.floor((base64.length * 3) / 4)
+  if (approxBytes > MAX_IMAGE_BYTES) {
+    throw new Error(`Backup image "${raw.id}" exceeds the per-image size limit`)
+  }
+  const binary = atob(base64)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+  return { id: raw.id, blob: new Blob([bytes], { type: `image/${match[1]}` }) }
+}
+
+/**
+ * Validate a parsed backup file end to end — every report, expense and
+ * image is checked against its expected shape, embedded images must be
+ * well-formed `data:image/...;base64,` URLs (never a fetchable URL), and
+ * per-image / total image size limits are enforced. Nothing is written to
+ * IndexedDB until the whole file passes, so a bad record can't overwrite
+ * some existing data before the problem is discovered.
+ */
+export function validateBackup(
+  parsed: BackupFile,
+): { reports: Report[]; expenses: Expense[]; images: ReceiptImage[] } {
+  const known = parsed.app === APP_ID || LEGACY_APP_IDS.includes(parsed.app)
+  if (!known) throw new Error('Not a Receipts Express backup file')
+  if (!Array.isArray(parsed.reports)) throw new Error('Backup file is missing its reports list')
+
+  const rawExpenses = parsed.expenses ?? []
+  const rawImages = parsed.images ?? []
+  if (!Array.isArray(rawExpenses)) throw new Error('Backup file has a malformed expenses list')
+  if (!Array.isArray(rawImages)) throw new Error('Backup file has a malformed images list')
+  if (rawImages.length > MAX_IMAGES) throw new Error('Backup file has too many images')
+
+  const reports = parsed.reports.map((r, i) => {
+    if (!isValidReport(r)) throw new Error(`Backup report #${i} is malformed`)
+    return r
+  })
+  const expenses = rawExpenses.map((e, i) => {
+    if (!isValidExpense(e)) throw new Error(`Backup expense #${i} is malformed`)
+    return e
+  })
+
+  let totalImageBytes = 0
+  const images = rawImages.map((img, i) => {
+    const decoded = decodeBackupImage(img, i)
+    totalImageBytes += decoded.blob.size
+    if (totalImageBytes > MAX_TOTAL_IMAGE_BYTES) {
+      throw new Error('Backup images exceed the total size limit')
+    }
+    return decoded
+  })
+
+  return { reports, expenses, images }
 }
 
 const LAST_BACKUP_KEY = 'br.lastBackupAt'
@@ -80,18 +192,15 @@ export async function exportBackup(): Promise<boolean> {
  * Restore from a backup file. Existing entries with the same ids are
  * overwritten; everything else is left untouched (safe to run on a
  * device that already has data).
+ *
+ * The entire file is validated first — shapes, embedded-image format, and
+ * size limits — and only then committed in one IndexedDB transaction. A
+ * malformed or hostile file is rejected before anything is written, so it
+ * can neither leave a partial restore behind nor overwrite existing data.
  */
 export async function importBackup(file: File): Promise<{ reports: number; expenses: number }> {
   const parsed = JSON.parse(await file.text()) as BackupFile
-  const known = parsed.app === APP_ID || LEGACY_APP_IDS.includes(parsed.app)
-  if (!known || !Array.isArray(parsed.reports)) {
-    throw new Error('Not a Receipts Express backup file')
-  }
-  for (const image of parsed.images ?? []) {
-    const blob = await (await fetch(image.dataUrl)).blob()
-    await saveImage({ id: image.id, blob })
-  }
-  for (const report of parsed.reports) await saveReport(report)
-  for (const expense of parsed.expenses ?? []) await saveExpense(expense)
-  return { reports: parsed.reports.length, expenses: (parsed.expenses ?? []).length }
+  const { reports, expenses, images } = validateBackup(parsed)
+  await importBackupData(reports, expenses, images)
+  return { reports: reports.length, expenses: expenses.length }
 }

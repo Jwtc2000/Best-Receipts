@@ -1,10 +1,10 @@
-name: Deploy to GitHub Pages
+name: Build, test, and deploy
 
 on:
   push:
     branches:
       - main
-      - claude/expense-report-receipt-scanner-v1lxoi
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -12,12 +12,32 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: test-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      # Informational only: report known advisories without blocking CI on
+      # issues that aren't fixed yet (see README/audit notes for tracking).
+      - run: npm audit --audit-level=critical || true
+
   build:
+    needs: test
+    # Only the main branch is ever deployed — a push to any other branch
+    # (including in-progress feature/agent branches) must not touch the
+    # live site. workflow_dispatch stays available for an explicit manual
+    # deploy, which always targets the ref chosen when it's run.
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +60,11 @@ jobs:
 
   deploy:
     needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: true
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

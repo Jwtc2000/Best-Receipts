@@ -54,6 +54,10 @@ export async function extractReceipt(
 
 const MONEY_RE = /(?:[$€£]\s*)?(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})(?!\d)/g
 
+function hasMoney(line: string): boolean {
+  return /(?:[$€£]\s*)?(?:\d{1,3}(?:[.,]\d{3})*[.,]\d{2})(?!\d)/.test(line)
+}
+
 function parseMoney(raw: string): number {
   // Normalize "1.234,56" and "1,234.56" to a plain float
   const cleaned = raw.replace(/[^0-9.,]/g, '')
@@ -149,10 +153,13 @@ export function parseReceiptText(text: string): Omit<ExtractedReceipt, 'rawText'
   }
 
   // --- Merchant: first plausible line of text near the top ---
+  // A fresh RegExp per call, not MONEY_RE.test(): MONEY_RE carries the `g`
+  // flag, so .test() would mutate its lastIndex across lines and could
+  // skip a match that starts before the leftover offset from a prior line.
   let merchant: string | undefined
   for (const line of lines.slice(0, 6)) {
     const letters = line.replace(/[^a-zA-Z]/g, '')
-    if (letters.length >= 3 && line.length <= 40 && !MONEY_RE.test(line)) {
+    if (letters.length >= 3 && line.length <= 40 && !hasMoney(line)) {
       merchant = tidyMerchant(line)
       break
     }

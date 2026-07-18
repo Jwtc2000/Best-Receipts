@@ -81,6 +81,26 @@ export async function saveExpense(expense: Expense): Promise<void> {
   await db.put('expenses', expense)
 }
 
+/**
+ * Save an expense together with an optional image swap, in one transaction:
+ * the new image (if any) and the expense record are written, and the old
+ * image is only removed once that succeeds. This way a failure (e.g. quota
+ * exceeded) aborts the whole write instead of deleting the old receipt
+ * image and losing it before the replacement is safely stored.
+ */
+export async function saveExpenseWithImage(
+  expense: Expense,
+  newImage: ReceiptImage | undefined,
+  staleImageId: string | undefined,
+): Promise<void> {
+  const db = await getDB()
+  const tx = db.transaction(['expenses', 'images'], 'readwrite')
+  if (newImage) void tx.objectStore('images').put(newImage)
+  void tx.objectStore('expenses').put(expense)
+  if (staleImageId) void tx.objectStore('images').delete(staleImageId)
+  await tx.done
+}
+
 export async function saveExpenses(expenses: Expense[]): Promise<void> {
   const db = await getDB()
   const tx = db.transaction('expenses', 'readwrite')
@@ -127,4 +147,23 @@ export async function getImage(id: string): Promise<ReceiptImage | undefined> {
 export async function deleteImage(id: string): Promise<void> {
   const db = await getDB()
   await db.delete('images', id)
+}
+
+// ---- Backup restore ----
+
+/**
+ * Write a restored backup's reports, expenses and images in a single
+ * transaction so a bad record can't leave the store partially overwritten.
+ */
+export async function importBackupData(
+  reports: Report[],
+  expenses: Expense[],
+  images: ReceiptImage[],
+): Promise<void> {
+  const db = await getDB()
+  const tx = db.transaction(['reports', 'expenses', 'images'], 'readwrite')
+  for (const image of images) void tx.objectStore('images').put(image)
+  for (const report of reports) void tx.objectStore('reports').put(report)
+  for (const expense of expenses) void tx.objectStore('expenses').put(expense)
+  await tx.done
 }

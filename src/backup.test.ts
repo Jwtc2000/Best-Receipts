@@ -1,0 +1,147 @@
+import { beforeEach, describe, expect, it } from 'vitest'
+import { resetFakeIndexedDB } from './test/idb-reset'
+import type { BackupFile } from './backup'
+
+beforeEach(() => {
+  resetFakeIndexedDB()
+})
+
+function validBackup(overrides: Partial<BackupFile> = {}): BackupFile {
+  return {
+    app: 'receipts-express',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    reports: [{ id: 'r1', name: 'Trip', createdAt: 1 }],
+    expenses: [
+      {
+        id: 'e1',
+        reportId: 'r1',
+        position: 0,
+        title: 'Lunch',
+        merchant: 'Cafe',
+        amount: 12,
+        currency: 'USD',
+        date: '2026-07-18',
+        category: 'Meals',
+        notes: '',
+        createdAt: 1,
+      },
+    ],
+    images: [],
+    ...overrides,
+  }
+}
+
+// 1x1 transparent PNG
+const TINY_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+
+describe('validateBackup', () => {
+  it('accepts a well-formed backup', async () => {
+    const { validateBackup } = await import('./backup')
+    const { reports, expenses, images } = validateBackup(validBackup())
+    expect(reports).toHaveLength(1)
+    expect(expenses).toHaveLength(1)
+    expect(images).toHaveLength(0)
+  })
+
+  it('rejects an unknown app id', async () => {
+    const { validateBackup } = await import('./backup')
+    expect(() => validateBackup(validBackup({ app: 'some-other-app' }))).toThrow()
+  })
+
+  it('rejects a malformed expense (non-numeric amount)', async () => {
+    const { validateBackup } = await import('./backup')
+    const bad = validBackup()
+    // @ts-expect-error intentionally malformed for the test
+    bad.expenses[0].amount = 'twelve'
+    expect(() => validateBackup(bad)).toThrow(/malformed/i)
+  })
+
+  it('rejects an expense missing its reportId', async () => {
+    const { validateBackup } = await import('./backup')
+    const bad = validBackup()
+    // @ts-expect-error intentionally malformed for the test
+    delete bad.expenses[0].reportId
+    expect(() => validateBackup(bad)).toThrow(/malformed/i)
+  })
+
+  it('decodes a valid data:image;base64 image', async () => {
+    const { validateBackup } = await import('./backup')
+    const { images } = validateBackup(
+      validBackup({ images: [{ id: 'img1', dataUrl: `data:image/png;base64,${TINY_PNG_BASE64}` }] }),
+    )
+    expect(images).toHaveLength(1)
+    expect(images[0].blob.type).toBe('image/png')
+    expect(images[0].blob.size).toBeGreaterThan(0)
+  })
+
+  it('rejects an image dataUrl that is actually a fetchable URL', async () => {
+    const { validateBackup } = await import('./backup')
+    expect(() =>
+      validateBackup(validBackup({ images: [{ id: 'img1', dataUrl: 'https://evil.example/x.png' }] })),
+    ).toThrow(/data url/i)
+  })
+
+  it('rejects an image over the per-image size limit', async () => {
+    const { validateBackup } = await import('./backup')
+    // ~22MB of base64 payload decodes to ~16.5MB, above the 15MB per-image cap
+    const huge = 'A'.repeat(22 * 1024 * 1024)
+    expect(() =>
+      validateBackup(validBackup({ images: [{ id: 'img1', dataUrl: `data:image/png;base64,${huge}` }] })),
+    ).toThrow(/size limit/i)
+  })
+
+  it('rejects a backup with more images than the count cap allows', async () => {
+    const { validateBackup } = await import('./backup')
+    // The count check runs before per-image decoding, so these don't need
+    // to be real images to exercise the cap.
+    const images = Array.from({ length: 5001 }, (_, i) => ({ id: `img${i}`, dataUrl: '' }))
+    expect(() => validateBackup(validBackup({ images }))).toThrow(/too many images/i)
+  })
+})
+
+describe('importBackup', () => {
+  it('writes reports, expenses, and decoded images together', async () => {
+    const db = await import('./db')
+    const { importBackup } = await import('./backup')
+    const backup = validBackup({
+      images: [{ id: 'img1', dataUrl: `data:image/png;base64,${TINY_PNG_BASE64}` }],
+    })
+    backup.expenses[0].imageId = 'img1'
+    const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' })
+
+    const result = await importBackup(file)
+
+    expect(result).toEqual({ reports: 1, expenses: 1 })
+    expect(await db.getReport('r1')).toBeDefined()
+    expect(await db.getExpense('e1')).toBeDefined()
+    expect(await db.getImage('img1')).toBeDefined()
+  })
+
+  it('writes nothing at all when one record in the file is invalid', async () => {
+    const db = await import('./db')
+    const { importBackup } = await import('./backup')
+    const backup = validBackup()
+    // A second, malformed expense alongside an otherwise-valid one.
+    backup.expenses.push({ ...backup.expenses[0], id: 'e2', amount: NaN })
+    const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' })
+
+    await expect(importBackup(file)).rejects.toThrow()
+
+    // Nothing from the file should have been written — not even the
+    // otherwise-valid report and first expense.
+    expect(await db.getReport('r1')).toBeUndefined()
+    expect(await db.getExpense('e1')).toBeUndefined()
+  })
+
+  it('rejects a backup whose image dataUrl would otherwise trigger a network fetch', async () => {
+    const db = await import('./db')
+    const { importBackup } = await import('./backup')
+    const backup = validBackup({ images: [{ id: 'img1', dataUrl: 'https://evil.example/x.png' }] })
+    const file = new File([JSON.stringify(backup)], 'backup.json', { type: 'application/json' })
+
+    await expect(importBackup(file)).rejects.toThrow()
+    expect(await db.getReport('r1')).toBeUndefined()
+  })
+})
