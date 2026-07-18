@@ -105,14 +105,38 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
     }
   }
 
+  const removeImage = () => {
+    setImageBlob(null)
+    setImageChanged(true)
+    setImageUrl((old) => {
+      if (old) URL.revokeObjectURL(old)
+      return null
+    })
+    setScanState('idle')
+  }
+
   const save = async () => {
     const amount = parseFloat(draft.amount)
     if (isNaN(amount)) return
     setSaving(true)
     try {
       const previousImageId = existing?.imageId
-      const replacingImage = imageChanged && imageBlob
-      const imageId = replacingImage ? newId() : previousImageId
+      // Three cases: untouched (keep imageId as-is); replaced with a new
+      // blob (new imageId, old one deleted); removed entirely (imageId
+      // cleared, old one deleted). imageChanged with a null blob means the
+      // user explicitly removed the photo, not that nothing changed.
+      let imageId = previousImageId
+      let newImage: { id: string; blob: Blob } | undefined
+      let staleImageId: string | undefined
+      if (imageChanged) {
+        staleImageId = previousImageId
+        if (imageBlob) {
+          imageId = newId()
+          newImage = { id: imageId, blob: imageBlob }
+        } else {
+          imageId = undefined
+        }
+      }
       const expense: Expense = {
         id: existing?.id ?? newId(),
         reportId: existing?.reportId ?? reportId,
@@ -127,11 +151,7 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
         imageId,
         createdAt: existing?.createdAt ?? Date.now(),
       }
-      await saveExpenseWithImage(
-        expense,
-        replacingImage ? { id: imageId!, blob: imageBlob! } : undefined,
-        replacingImage ? previousImageId : undefined,
-      )
+      await saveExpenseWithImage(expense, newImage, staleImageId)
       onDone()
     } finally {
       setSaving(false)
@@ -178,6 +198,9 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
               </button>
               <button className="btn ghost small with-icon" onClick={() => fileInput.current?.click()}>
                 <Icon name="image" size={16} /> Replace
+              </button>
+              <button className="btn ghost small with-icon" onClick={removeImage}>
+                <Icon name="trash" size={16} /> Remove
               </button>
             </div>
           </div>

@@ -15,6 +15,7 @@ import {
 import { exportReportPdf } from '../pdf'
 import { exportReportCsv } from '../csv'
 import { expenseMatches } from '../search'
+import { dayColor, contrastText, rgbToCss } from '../colors'
 import Icon from './icons'
 
 interface Props {
@@ -375,10 +376,14 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
             {expenses.map((expense, index) => {
               if (searching && !expenseMatches(expense, query)) return null
               const dayNumber = dayDividerAt.has(index) ? dayNumberByDate.get(expense.date) : undefined
+              const dayBg = dayNumber !== undefined ? dayColor(dayNumber) : null
               return (
               <Fragment key={expense.id}>
-              {dayNumber !== undefined && (
-                <li className="day-divider">
+              {dayNumber !== undefined && dayBg && (
+                <li
+                  className="day-divider"
+                  style={{ backgroundColor: rgbToCss(dayBg), color: rgbToCss(contrastText(dayBg)) }}
+                >
                   <span className="day-divider-label">Day {dayNumber}</span>
                   <span className="day-divider-date">{formatDate(expense.date)}</span>
                 </li>
