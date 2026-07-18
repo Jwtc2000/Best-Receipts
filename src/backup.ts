@@ -109,8 +109,16 @@ export function validateBackup(
     if (!isValidReport(r)) throw new Error(`Backup report #${i} is malformed`)
     return r
   })
+  const reportIds = new Set(reports.map((r) => r.id))
   const expenses = rawExpenses.map((e, i) => {
     if (!isValidExpense(e)) throw new Error(`Backup expense #${i} is malformed`)
+    // Every export bundles all reports and expenses together, so a valid
+    // backup never references a report outside its own file. An expense
+    // that does would silently become permanently invisible in the UI
+    // (nothing ever lists it), so reject it up front instead.
+    if (!reportIds.has(e.reportId)) {
+      throw new Error(`Backup expense #${i} references a report that isn't in this backup`)
+    }
     return e
   })
 

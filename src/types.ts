@@ -52,7 +52,12 @@ export function formatMoney(amount: number, currency: string): string {
 export function formatTotal(expenses: { amount: number; currency: string }[]): string {
   if (expenses.length === 0) return formatMoney(0, 'USD')
   const totals = new Map<string, number>()
-  for (const e of expenses) totals.set(e.currency, (totals.get(e.currency) ?? 0) + e.amount)
+  for (const e of expenses) {
+    // Normalize case so "USD" and "usd" (e.g. from an older backup) merge
+    // into one bucket instead of showing as two separate totals.
+    const currency = e.currency.trim().toUpperCase()
+    totals.set(currency, (totals.get(currency) ?? 0) + e.amount)
+  }
   return [...totals].map(([currency, amount]) => formatMoney(amount, currency)).join(' + ')
 }
 

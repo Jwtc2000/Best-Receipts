@@ -66,6 +66,13 @@ describe('validateBackup', () => {
     expect(() => validateBackup(bad)).toThrow(/malformed/i)
   })
 
+  it('rejects an expense whose reportId is not in this backup (regression)', async () => {
+    const { validateBackup } = await import('./backup')
+    const bad = validBackup()
+    bad.expenses[0].reportId = 'some-other-report-not-in-this-file'
+    expect(() => validateBackup(bad)).toThrow(/references a report/i)
+  })
+
   it('decodes a valid data:image;base64 image', async () => {
     const { validateBackup } = await import('./backup')
     const { images } = validateBackup(
