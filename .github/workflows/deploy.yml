@@ -1,17 +1,12 @@
 name: Build, test, and deploy
-
 on:
   push:
     branches:
       - main
   pull_request:
   workflow_dispatch:
-
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -34,6 +29,9 @@ jobs:
 
   build:
     needs: test
+    permissions:
+      contents: read
+      pages: write
     # Only the main branch is ever deployed — a push to any other branch
     # (including in-progress feature/agent branches) must not touch the
     # live site. workflow_dispatch stays available for an explicit manual
@@ -64,6 +62,9 @@ jobs:
 
   deploy:
     needs: build
+    permissions:
+      pages: write
+      id-token: write
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     concurrency:
