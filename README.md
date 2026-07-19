@@ -119,6 +119,19 @@ By design, all receipt data — images, extracted text, and report contents — 
 
 ---
 
+## Disclaimer & Data Guidance
+
+This is a personal project, built and maintained independently. It has no
+affiliation with, endorsement from, or approval by FedEx, and it is not a
+production system operated by or for any organization.
+
+By design, all receipt data — images, extracted text, and report contents —
+stays on your device (see [SECURITY.md](./SECURITY.md) for exactly how).
+Exported PDFs, once you save or share them, are your responsibility to
+handle according to your own organization's data-handling rules — this app
+has no visibility into, or control over, what happens to a file after it
+leaves the app.
+
 ## Versioning
 
 The app's version lives in `package.json` (semver) and is shown in the app under Menu → About. See [CHANGELOG.md](./CHANGELOG.md) for release notes — bump the version there whenever a change lands on `main`.
