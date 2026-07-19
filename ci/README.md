@@ -16,7 +16,7 @@ Every stage below runs on every push and every PR unless marked **main-only**.
 | Stage | Tool | Version | What it checks |
 |---|---|---|---|
 | Secrets scan | [gitleaks](https://github.com/gitleaks/gitleaks) | 8.30.1 | Working tree, against `.gitleaks.toml` (default ruleset + this repo's custom privacy rules — see below) |
-| SAST | [semgrep](https://semgrep.dev/) | latest (unpinned, installed via `pip3 install semgrep`) | `p/default`, `p/typescript`, `p/react`, `p/owasp-top-ten` rulesets, metrics off |
+| SAST | [semgrep](https://semgrep.dev/) | 1.170.0 | `p/default`, `p/typescript`, `p/react`, `p/owasp-top-ten` rulesets, metrics off |
 | Workflow audit | [zizmor](https://github.com/zizmorcore/zizmor) | 1.27.0 | `.github/workflows/` for Actions supply-chain/permissions issues |
 | Dockerfile lint | [hadolint](https://github.com/hadolint/hadolint) | 2.14.0 | `ci/agent/Dockerfile` |
 | Supply chain | [osv-scanner](https://github.com/google/osv-scanner) | 2.4.0 | `package-lock.json` against the OSV vulnerability database |
@@ -29,6 +29,15 @@ The full-history secrets scan and SBOM generation are main-only because both are
 
 - `.gitleaks.toml` extends gitleaks' built-in ruleset (`useDefault = true`) with three custom rules tagged `privacy`/`pii`: a macOS `/Users/<name>` path, an email-like string on a `.local` hostname, and an absolute `file://` URI. These exist because a public repo leaking a contributor's local username or hostname is a real finding here, not just credential/token secrets. Each rule was validated against the pre-scrub content of `docs/governance/REVIEW.md` as a known-positive fixture before being added.
 - `.gitleaksignore` suppresses the specific historical fingerprints from that same incident (commit `f8eaec7`) — the file itself was fixed going forward, but git history was deliberately left unrewritten (a force-push rewrite would break every existing clone/fork over a non-secret, low-severity leak), so the full-history scan needs those exact fingerprints allowlisted to stay green rather than failing forever on already-handled history. Any *new* finding — including a new occurrence of the same pattern elsewhere — still fails the build.
+
+### Dockerfile lint exceptions
+
+`ci/agent/Dockerfile` carries two annotated `hadolint ignore=` comments, each with an inline reason at the point of use:
+
+- **DL3008** (pin apt package versions) on the `git`/`curl`/`python3-pip` install — left unpinned deliberately. Debian apt version pinning is brittle across the mirror/snapshot lifecycle (a pinned version can vanish from the mirror before the next rebuild), and these three are base-layer plumbing, not security-sensitive scan tools. Every actual scan tool below them *is* pinned, individually, by its own `ARG`.
+- **DL3059** (consolidate consecutive `RUN` instructions) on the zizmor install — left as separate layers deliberately, so bumping one tool's version only invalidates and re-downloads that tool's layer on rebuild, not every tool's.
+
+`semgrep`, previously installed unpinned, now has its own `ARG SEMGREP_VERSION` like every other tool (this was hadolint's DL3013 finding on first run — a legitimate catch, not an exception).
 
 ## Windows host operations
 

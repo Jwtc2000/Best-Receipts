@@ -2,13 +2,25 @@
 # (Debian-based; equivalent to the "latest"/"latest-jdk21" floating tags
 # as of 2026-07-18). Debian base is used instead of Alpine because semgrep's
 # PyPI wheels target glibc, not musl.
+#
+# Each scan tool below gets its own RUN layer rather than being merged
+# together: bumping one tool's ARG only invalidates and re-downloads that
+# tool's layer on rebuild, not every tool's.
 FROM jenkins/inbound-agent:3383.vc8881d4b_0e76-1-jdk21
 USER root
 ARG GITLEAKS_VERSION=8.30.1
+ARG SEMGREP_VERSION=1.170.0
 ARG ZIZMOR_VERSION=1.27.0
 ARG OSV_SCANNER_VERSION=2.4.0
 ARG HADOLINT_VERSION=2.14.0
 ARG SYFT_VERSION=1.48.0
+# Intentionally unpinned: apt version pinning on Debian is brittle across
+# mirror/snapshot lifecycle (a pinned version can vanish from the mirror
+# before the next rebuild, breaking the build over a transitive tool
+# dependency rather than an actual security concern). git/curl/python3-pip
+# are base-layer plumbing, not security-sensitive scan tools — those are
+# all pinned individually below by their own ARGs.
+# hadolint ignore=DL3008
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
@@ -20,8 +32,9 @@ RUN curl -fsSL -o /tmp/gitleaks.tar.gz \
     && tar -xzf /tmp/gitleaks.tar.gz -C /usr/local/bin gitleaks \
     && rm /tmp/gitleaks.tar.gz \
     && gitleaks version
-RUN pip3 install --no-cache-dir --break-system-packages semgrep
+RUN pip3 install --no-cache-dir --break-system-packages "semgrep==${SEMGREP_VERSION}"
 # Workflow security auditor
+# hadolint ignore=DL3059
 RUN pip3 install --no-cache-dir --break-system-packages "zizmor==${ZIZMOR_VERSION}"
 # Supply-chain vulnerability scanner (OSV database).
 # Note: v2.x release assets are named osv-scanner_linux_amd64 with the
