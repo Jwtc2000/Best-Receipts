@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -8,6 +8,29 @@ import { VitePWA } from 'vite-plugin-pwa'
 // version — bump it there (semver) and it flows into the build and the
 // in-app About menu automatically.
 const pkg = JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8'))
+
+const CSP =
+  "default-src 'self'; connect-src 'self'; img-src 'self' blob: data:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; worker-src 'self' blob:"
+
+// Build-only: Vite's dev server injects CSS via inline <style> tags for
+// HMR, which style-src without 'unsafe-inline' blocks. The deployed app —
+// what this CSP actually protects — always gets it; dev mode is
+// unaffected, since the production build extracts CSS to a real file.
+function cspPlugin(): Plugin {
+  return {
+    name: 'inject-csp',
+    apply: 'build',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'meta',
+          attrs: { 'http-equiv': 'Content-Security-Policy', content: CSP },
+          injectTo: 'head-prepend',
+        },
+      ]
+    },
+  }
+}
 
 export default defineConfig({
   // GitHub Pages serves a project site from /<repo>/ — the deploy workflow
@@ -17,6 +40,7 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   plugins: [
+    cspPlugin(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
