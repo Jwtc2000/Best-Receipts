@@ -2,7 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import type { Expense, Report } from '../types'
 import { formatMoney, formatTotal, newId, todayIso } from '../types'
 import { listReports, listExpenses, saveReport, deleteReport } from '../db'
-import { exportBackup, importBackup, lastBackupAt, dismissBackupWarning, shouldShowBackupWarning } from '../backup'
+import {
+  exportBackup,
+  importBackup,
+  lastBackupAt,
+  backupIsStale,
+  dismissBackupWarning,
+  shouldShowBackupWarning,
+} from '../backup'
 import { getProfile, saveProfile, type Profile } from '../profile'
 import { expenseMatches } from '../search'
 import Icon from './icons'
@@ -339,6 +346,11 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
           const hasData = summaries.some((s) => s.count > 0)
           const last = lastBackupAt()
           const showWarning = hasData && shouldShowBackupWarning()
+          // Stale but snoozed: hide the card entirely rather than leaving a
+          // plain-styled "Never backed up" card that reads as a second,
+          // undismissable nag. A healthy (recently backed up) card still
+          // shows, since that's ongoing utility (Restore access), not a nag.
+          if (hasData && backupIsStale() && !showWarning) return null
           return (
             <section className={`backup-card${showWarning ? ' stale' : ''}`}>
               <div className="backup-info">
