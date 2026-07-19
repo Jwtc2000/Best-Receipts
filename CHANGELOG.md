@@ -5,7 +5,35 @@ All notable changes to this project are documented here.
 Versioning follows [Semantic Versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`):
 bump `MAJOR` for breaking changes to stored data or backup format, `MINOR` for new
 user-facing features, and `PATCH` for fixes with no visible feature change. The
-version lives in `package.json` and is shown in the app under Menu → About.
+version lives in `package.json` and is shown in the app under Menu → About. Every
+merge to `main` that changes app behavior gets a version bump and a tag.
+
+## [1.9.1] - 2026-07-19
+
+### Added
+- Jenkins security pipeline: secrets scanning (gitleaks) and SAST
+  (semgrep) on zero-privilege agent infrastructure, gating merges to
+  `main` alongside GitHub Actions.
+- Every GitHub Action pinned to a full commit SHA instead of a mutable
+  tag, with Dependabot on a 7-day cooldown before proposing updates —
+  the first pin-update round (checkout, setup-node, configure-pages,
+  deploy-pages, upload-pages-artifact) merged and deployed clean.
+- `persist-credentials: false` on both `checkout` steps — neither CI
+  job performs an authenticated git operation after checkout, so the
+  token is no longer written to disk at all.
+- Branch protection on `main` requiring both CI systems (GitHub
+  Actions `test` and Jenkins `continuous-integration/jenkins/pr-merge`)
+  to pass, strict mode, enforced for admins.
+- Apache-2.0 [LICENSE](./LICENSE).
+- A Content-Security-Policy (`connect-src 'self'`, no network access
+  beyond this app's own origin), injected into every production build
+  and asserted by a vitest test against the actual build output.
+- [SECURITY.md](./SECURITY.md) with accurate data classification —
+  receipts are real personal/financial data, not public data.
+- Rebuilt [README.md](./README.md): purpose, the problem this app
+  addresses, and a verifiable security-posture summary.
+- [docs/PILOT.md](./docs/PILOT.md): a pilot proposal for standardizing
+  receipt-to-PDF capture for travel expense filing.
 
 ## [1.9.0] - 2026-07-18
 
