@@ -14,7 +14,7 @@ import { getProfile, saveProfile, type Profile } from '../profile'
 import { expenseMatches } from '../search'
 import Icon from './icons'
 import DrawerSection from './DrawerSection'
-import { ArrowDivider, HeaderNodeArt } from './decorative'
+import { ArrowDivider, HeaderPlanes } from './decorative'
 
 interface ReportSummary {
   report: Report
@@ -135,7 +135,7 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
   return (
     <>
       <header className="topbar">
-        <HeaderNodeArt />
+        <HeaderPlanes />
         <div className="topbar-title">
           <span className="logo">
             <Icon name="receipt" size={24} />

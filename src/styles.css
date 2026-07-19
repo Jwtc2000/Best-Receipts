@@ -64,17 +64,93 @@ body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
-.topbar-node-art {
+.topbar-planes {
   /* inset: 0 already confines this exactly to the topbar's box, so it
-     never needs `overflow: hidden` on .topbar — which would otherwise
-     clip the export dropdown and other absolutely-positioned menus that
-     intentionally extend below the header. */
+     never needs `overflow: hidden` on .topbar itself — which would
+     otherwise clip the export dropdown and other absolutely-positioned
+     menus that intentionally extend below the header. overflow: hidden
+     lives here instead, scoped to just this layer, to clip planes as
+     they enter/exit past the header's left and right edges. */
   position: absolute;
   inset: 0;
   z-index: -1;
-  width: 100%;
-  height: 100%;
+  overflow: hidden;
   pointer-events: none;
+}
+
+.topbar-plane {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  color: #fff;
+  opacity: 0.32;
+}
+
+.topbar-plane-a {
+  animation: plane-fly-a 17s linear infinite;
+  animation-delay: -4s;
+}
+
+.topbar-plane-b {
+  width: 12px;
+  height: 12px;
+  animation: plane-fly-b 21s linear infinite;
+  animation-delay: -11s;
+}
+
+.topbar-plane-c {
+  width: 13px;
+  height: 13px;
+  animation: plane-fly-c 25s linear infinite;
+  animation-delay: -18s;
+}
+
+/* left-to-right, gently rising */
+@keyframes plane-fly-a {
+  from {
+    left: -8%;
+    top: 62%;
+    transform: rotate(12deg);
+  }
+  to {
+    left: 108%;
+    top: 42%;
+    transform: rotate(12deg);
+  }
+}
+
+/* right-to-left, gently descending */
+@keyframes plane-fly-b {
+  from {
+    left: 108%;
+    top: 22%;
+    transform: rotate(195deg);
+  }
+  to {
+    left: -8%;
+    top: 38%;
+    transform: rotate(195deg);
+  }
+}
+
+/* steep diagonal, bottom-left to top-right */
+@keyframes plane-fly-c {
+  from {
+    left: -8%;
+    top: 88%;
+    transform: rotate(-28deg);
+  }
+  to {
+    left: 108%;
+    top: 2%;
+    transform: rotate(-28deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar-plane {
+    display: none;
+  }
 }
 
 .topbar h1 {
