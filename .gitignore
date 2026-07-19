@@ -5,3 +5,9 @@ dev-dist
 *.local
 .DS_Store
 *.tsbuildinfo
+
+# Android signing material — must never enter the repo
+*.jks
+*.keystore
+key.properties
+keystore.properties
