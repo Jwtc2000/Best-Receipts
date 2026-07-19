@@ -1,0 +1,31 @@
+title = "Receipts Express gitleaks config"
+
+# Start from gitleaks' full built-in secret-detection ruleset, then extend it
+# with privacy rules below. This repo is public, so leaking a contributor's
+# local machine details (username, hostname) is treated as a real finding,
+# not just credential/token secrets.
+[extend]
+useDefault = true
+
+# Each rule here was validated against the pre-scrub content of
+# docs/governance/REVIEW.md (see PR that added this file) as a known-positive
+# fixture — that file previously leaked exactly these three shapes:
+# a /Users/<name> path, a <name>@<host>.local address, and a file:// URI.
+
+[[rules]]
+id = "privacy-macos-user-path"
+description = "Absolute macOS user home directory path (/Users/<name>/...) — leaks a local username"
+regex = '''/Users/[A-Za-z0-9_.-]+'''
+tags = ["privacy", "pii"]
+
+[[rules]]
+id = "privacy-local-hostname-email"
+description = "Email-like string on a .local mDNS hostname — leaks a local machine hostname"
+regex = '''[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.local\b'''
+tags = ["privacy", "pii"]
+
+[[rules]]
+id = "privacy-local-file-uri"
+description = "Absolute local file:// URI — leaks local filesystem layout/username"
+regex = '''file:///[A-Za-z0-9_./%-]+'''
+tags = ["privacy", "pii"]

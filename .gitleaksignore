@@ -1,0 +1,24 @@
+# Known, accepted, remediated-in-tree residual risk — not a live leak.
+#
+# Incident: commit f8eaec7 (2026-07-18, "Prepare release 1.9.1 with
+# security framework, pilot/review docs, and improved README") added
+# docs/governance/REVIEW.md containing a local-machine email on a
+# .local mDNS hostname, and an absolute file:// path revealing a local
+# username — see PR #28's description for the exact original strings.
+#
+# Remediation: fixed going forward in PR #28 ("Scrub personal info from
+# the governance review checklist"), which replaced all three with
+# generic placeholders. Git history was deliberately left unrewritten —
+# a force-push rewrite would break every existing clone/fork over a
+# non-secret, low-severity leak — so these exact historical fingerprints
+# are allowlisted here instead, scoped to commit+file+rule+line. Any
+# *new* finding, including a new occurrence of the same pattern in a
+# different commit or file, is not covered by this ignore and still
+# fails the build.
+#
+# f8eaec7:docs/governance/REVIEW.md:15 — file:// path leaking username
+f8eaec7d26a1ff710b6aecc91cf912d9549f653c:docs/governance/REVIEW.md:privacy-local-file-uri:15
+# f8eaec7:docs/governance/REVIEW.md:15 — /Users/<name> path, same line
+f8eaec7d26a1ff710b6aecc91cf912d9549f653c:docs/governance/REVIEW.md:privacy-macos-user-path:15
+# f8eaec7:docs/governance/REVIEW.md:10 — .local-hostname email address
+f8eaec7d26a1ff710b6aecc91cf912d9549f653c:docs/governance/REVIEW.md:privacy-local-hostname-email:10
