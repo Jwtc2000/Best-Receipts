@@ -5,7 +5,7 @@ import { getExpense, saveExpenseWithImage, getImage, nextPosition } from '../db'
 import { compressImage } from '../image'
 import { extractReceipt } from '../ocr'
 import Icon from './icons'
-import { HeaderNodeArt } from './decorative'
+import { HeaderPlanes } from './decorative'
 
 interface Props {
   reportId: string
@@ -171,7 +171,7 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
   return (
     <>
       <header className="topbar">
-        <HeaderNodeArt />
+        <HeaderPlanes />
         <button className="icon-btn" onClick={onDone} aria-label="Back">
           <Icon name="chevron-left" size={22} />
         </button>

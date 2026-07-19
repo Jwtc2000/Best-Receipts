@@ -19,7 +19,7 @@ import { dayColor, contrastText, rgbToCss } from '../colors'
 import { foodBalanceForDate, formatFoodBalance, formatPersonalTotal } from '../mealAllowance'
 import Icon from './icons'
 import DrawerSection from './DrawerSection'
-import { HeaderNodeArt } from './decorative'
+import { HeaderPlanes } from './decorative'
 
 interface Props {
   reportId: string
@@ -229,7 +229,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   return (
     <>
       <header className="topbar">
-        <HeaderNodeArt />
+        <HeaderPlanes />
         <button className="icon-btn" onClick={onBack} aria-label="Back">
           <Icon name="chevron-left" size={22} />
         </button>
