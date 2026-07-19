@@ -4,6 +4,7 @@ import type { BackupFile } from './backup'
 
 beforeEach(() => {
   resetFakeIndexedDB()
+  localStorage.clear()
 })
 
 function validBackup(overrides: Partial<BackupFile> = {}): BackupFile {
@@ -200,5 +201,55 @@ describe('importBackup', () => {
 
     await expect(importBackup(file)).rejects.toThrow()
     expect(await db.getReport('r1')).toBeUndefined()
+  })
+})
+
+describe('backupIsStale / shouldShowBackupWarning / dismissBackupWarning', () => {
+  const DAY = 24 * 60 * 60 * 1000
+
+  it('is stale when never backed up', async () => {
+    const { backupIsStale } = await import('./backup')
+    expect(backupIsStale()).toBe(true)
+  })
+
+  it('is not stale within 7 days of the last backup', async () => {
+    const { backupIsStale } = await import('./backup')
+    localStorage.setItem('br.lastBackupAt', String(Date.now() - 3 * DAY))
+    expect(backupIsStale()).toBe(false)
+  })
+
+  it('is stale more than 7 days after the last backup', async () => {
+    const { backupIsStale } = await import('./backup')
+    localStorage.setItem('br.lastBackupAt', String(Date.now() - 8 * DAY))
+    expect(backupIsStale()).toBe(true)
+  })
+
+  it('shows the warning when stale and never dismissed', async () => {
+    const { shouldShowBackupWarning } = await import('./backup')
+    expect(shouldShowBackupWarning()).toBe(true)
+  })
+
+  it('hides the warning immediately after dismissal', async () => {
+    const { dismissBackupWarning, shouldShowBackupWarning } = await import('./backup')
+    dismissBackupWarning()
+    expect(shouldShowBackupWarning()).toBe(false)
+  })
+
+  it('keeps the warning hidden within the 5-day snooze window', async () => {
+    const { shouldShowBackupWarning } = await import('./backup')
+    localStorage.setItem('br.backupWarningDismissedAt', String(Date.now() - 4 * DAY))
+    expect(shouldShowBackupWarning()).toBe(false)
+  })
+
+  it('shows the warning again once the 5-day snooze window elapses', async () => {
+    const { shouldShowBackupWarning } = await import('./backup')
+    localStorage.setItem('br.backupWarningDismissedAt', String(Date.now() - 6 * DAY))
+    expect(shouldShowBackupWarning()).toBe(true)
+  })
+
+  it('never shows the warning when not stale, regardless of dismissal state', async () => {
+    const { shouldShowBackupWarning } = await import('./backup')
+    localStorage.setItem('br.lastBackupAt', String(Date.now()))
+    expect(shouldShowBackupWarning()).toBe(false)
   })
 })

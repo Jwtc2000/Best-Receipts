@@ -439,6 +439,10 @@ body {
   text-align: center;
 }
 
+.drawer-footer p + p {
+  margin-top: 6px;
+}
+
 /* ---- Backup card ---- */
 
 .backup-card {
