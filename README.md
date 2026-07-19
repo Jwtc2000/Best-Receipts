@@ -42,6 +42,19 @@ Open the dev server URL on your phone (same network) or deploy `dist/` to any st
 
 The OCR engine (worker, WASM core, English language data) is **self-hosted**: `npm run build`/`npm run dev` copy it from `node_modules` into `public/tesseract/` automatically, so the app never calls a CDN and scanning works fully offline once the app has loaded.
 
+## Disclaimer & Data Guidance
+
+This is a personal project, built and maintained independently. It has no
+affiliation with, endorsement from, or approval by FedEx, and it is not a
+production system operated by or for any organization.
+
+By design, all receipt data — images, extracted text, and report contents —
+stays on your device (see [SECURITY.md](./SECURITY.md) for exactly how).
+Exported PDFs, once you save or share them, are your responsibility to
+handle according to your own organization's data-handling rules — this app
+has no visibility into, or control over, what happens to a file after it
+leaves the app.
+
 ## Versioning
 
 The app's version lives in `package.json` (semver) and is shown in the app under
