@@ -1,18 +1,18 @@
 # Project Review & Governance Checklist: Receipts Express
 
-This checklist prepares the **Receipts Express** application for governance review and departmental pilot approval. It follows the FedEx AI Efficiency Hub project checklist standard.
+This checklist prepares the **Receipts Express** application for governance review and departmental pilot approval. It is structured after the [AI Pilot Program Template](https://github.com/arigatoexpress/AI-Efficiency/blob/main/docs/pilot-program-template.md) from the FedEx AI Efficiency Hub ([arigatoexpress/AI-Efficiency](https://github.com/arigatoexpress/AI-Efficiency)) — credit to that project for the checklist format this review is based on. Nothing here should be read as FedEx approval, endorsement, or affiliation — Receipts Express is an independent personal project (see the README's [Disclaimer & Data Guidance](../../README.md#disclaimer--data-guidance) section).
 
 ---
 
 ## 1. Project Basics
 
 * **Project Name**: Receipts Express — standardized receipt-to-PDF capture
-* **Owner**: Jordan Campbell ([jordancampbell@Jordans-MacBook-Air.local](mailto:jordancampbell@Jordans-MacBook-Air.local))
+* **Owner**: TBD — proposing department's pilot sponsor
 * **Audience**: Employees who travel and file expense reports
 * **Problem Statement**: Travel expense filing is slow and error-prone when receipts are kept loose (paper or camera roll) until trip's end, then manually reconstructed into a report.
 * **Current Manual Process**: Employee collects paper or photo receipts during travel, then manually transcribes merchant, date, and amount for each into the corporate expense system.
 * **Expected Benefit**: Standardize and speed up the capture step *before* entering data into the corporate expense system, reducing filing latency and user friction.
-* **Demo Link or Folder**: [Receipts-Express Directory](file:///Users/jordancampbell/Receipts-Express)
+* **Demo Link or Folder**: [Jwtc2000/Receipts-Express](https://github.com/Jwtc2000/Receipts-Express)
 * **Current Status**: Prototype / Pilot Proposal
 
 ---
@@ -78,7 +78,7 @@ This checklist prepares the **Receipts Express** application for governance revi
 * **Human review path is documented**: Yes, user edit gate prior to database save.
 * **Monitoring or audit log exists**: N/A (entirely local client-side application; user action history is not logged to any server to preserve privacy).
 * **Failure mode is understood**: Yes, OCR failures result in manual form fallback; browser storage eviction results in local data loss.
-* **Owner and backup owner are named**: Jordan Campbell / (Backup TBD by pilot department).
+* **Owner and backup owner are named**: TBD — proposing department's pilot sponsor / (Backup TBD by pilot department).
 * **Governance approval is recorded**: Pending.
 
 ---
