@@ -75,6 +75,12 @@ The text recognition engine (worker, WASM core, English language data) is **self
 
 If you are a developer looking to run this project locally, execute the following commands in your command-line interface (terminal):
 
+> [!WARNING]
+> **Local Development CSP Bypass & Data Privacy**: 
+> In local development mode (`npm run dev`), the Content-Security-Policy (CSP) is bypassed to allow hot-reloading (HMR) of styling files. Therefore, browser-level network exfiltration blocks are NOT active in development mode.
+> 
+> **Never load or scan real corporate/personal receipt data when running the app locally in development mode.** Always use mock/synthetic receipts for testing features locally. For end-to-end testing with real files, build and run the production package locally using `npm run build` and `npm run preview` (where the full CSP is active).
+
 1. **Install dependencies**: Downloads all the external libraries the app needs to run.
    ```bash
    npm install
@@ -116,21 +122,6 @@ Open the dev server URL on your phone (same network) or deploy `dist/` to any st
 This is a personal project, built and maintained independently. It has no affiliation with, endorsement from, or approval by FedEx, and it is not a production system operated by or for any organization.
 
 By design, all receipt data — images, extracted text, and report contents — stays on your device (see [SECURITY.md](./SECURITY.md) for exactly how). Exported PDFs, once you save or share them, are your responsibility to handle according to your own organization's data-handling rules — this app has no visibility into, or control over, what happens to a file after it leaves the app.
-
----
-
-## Disclaimer & Data Guidance
-
-This is a personal project, built and maintained independently. It has no
-affiliation with, endorsement from, or approval by FedEx, and it is not a
-production system operated by or for any organization.
-
-By design, all receipt data — images, extracted text, and report contents —
-stays on your device (see [SECURITY.md](./SECURITY.md) for exactly how).
-Exported PDFs, once you save or share them, are your responsibility to
-handle according to your own organization's data-handling rules — this app
-has no visibility into, or control over, what happens to a file after it
-leaves the app.
 
 ## Versioning
 
