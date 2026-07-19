@@ -6,7 +6,9 @@ FROM jenkins/inbound-agent:3383.vc8881d4b_0e76-1-jdk21
 USER root
 ARG GITLEAKS_VERSION=8.30.1
 ARG ZIZMOR_VERSION=1.27.0
-ARG OSV_SCANNER_VERSION=2.3.8
+ARG OSV_SCANNER_VERSION=2.4.0
+ARG HADOLINT_VERSION=2.14.0
+ARG SYFT_VERSION=1.48.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
@@ -28,5 +30,16 @@ RUN curl -fsSL -o /usr/local/bin/osv-scanner \
         "https://github.com/google/osv-scanner/releases/download/v${OSV_SCANNER_VERSION}/osv-scanner_linux_amd64" \
     && chmod +x /usr/local/bin/osv-scanner \
     && osv-scanner --version
+# Dockerfile linter, used against ci/agent/Dockerfile itself.
+RUN curl -fsSL -o /usr/local/bin/hadolint \
+        "https://github.com/hadolint/hadolint/releases/download/v${HADOLINT_VERSION}/hadolint-linux-x86_64" \
+    && chmod +x /usr/local/bin/hadolint \
+    && hadolint --version
+# SBOM generator, run on main to produce sbom.json as a build artifact.
+RUN curl -fsSL -o /tmp/syft.tar.gz \
+        "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz" \
+    && tar -xzf /tmp/syft.tar.gz -C /usr/local/bin syft \
+    && rm /tmp/syft.tar.gz \
+    && syft version
 
 USER jenkins

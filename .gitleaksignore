@@ -1,0 +1,14 @@
+# Historical findings accepted as known/handled, so the full-history
+# gitleaks scan (Jenkinsfile, main-branch-only) stays green rather than
+# failing forever on content that's already been fixed in the tree but
+# can't be un-said from past commits.
+#
+# docs/governance/REVIEW.md leaked a local machine email, a .local
+# hostname, and a file:// path revealing a local username. Fixed going
+# forward in the commit that scrubbed the file (see git log for
+# docs/governance/REVIEW.md); git history itself was deliberately left
+# unrewritten rather than force-pushed, since that would break every
+# existing clone/fork for a low-severity, non-secret leak.
+f8eaec7d26a1ff710b6aecc91cf912d9549f653c:docs/governance/REVIEW.md:privacy-local-file-uri:15
+f8eaec7d26a1ff710b6aecc91cf912d9549f653c:docs/governance/REVIEW.md:privacy-macos-user-path:15
+f8eaec7d26a1ff710b6aecc91cf912d9549f653c:docs/governance/REVIEW.md:privacy-local-hostname-email:10
