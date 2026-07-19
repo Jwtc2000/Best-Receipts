@@ -29,3 +29,16 @@ id = "privacy-local-file-uri"
 description = "Absolute local file:// URI — leaks local filesystem layout/username"
 regex = '''file:///[A-Za-z0-9_./%-]+'''
 tags = ["privacy", "pii"]
+
+# Backstop for upcoming Android (TWA/APK) work: a keystore or its
+# properties file must never be committed, full stop. This is a
+# path/filename rule, not a content regex — keystores are binary, so
+# their contents can't be reliably pattern-matched, but their filenames
+# are consistent and worth catching even if .gitignore is ever bypassed
+# (e.g. `git add -f`).
+
+[[rules]]
+id = "android-keystore-file"
+description = "Android signing keystore or its properties file — must never be committed"
+path = '''(\.jks|\.keystore|key\.properties|keystore\.properties)$'''
+tags = ["android", "signing", "critical"]
