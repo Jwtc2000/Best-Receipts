@@ -18,6 +18,8 @@ import { expenseMatches } from '../search'
 import { dayColor, contrastText, rgbToCss } from '../colors'
 import { foodBalanceForDate, formatFoodBalance, formatPersonalTotal } from '../mealAllowance'
 import Icon from './icons'
+import DrawerSection from './DrawerSection'
+import { HeaderNodeArt } from './decorative'
 
 interface Props {
   reportId: string
@@ -227,6 +229,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   return (
     <>
       <header className="topbar">
+        <HeaderNodeArt />
         <button className="icon-btn" onClick={onBack} aria-label="Back">
           <Icon name="chevron-left" size={22} />
         </button>
@@ -299,8 +302,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
             </div>
 
             <div className="drawer-section">
-              <section className="drawer-subsection">
-                <h3>Trip Dates</h3>
+              <DrawerSection title="Trip Dates">
                 <p className="muted">
                   Sets Day 1 for this report's timeline and PDF export — expenses are grouped by the
                   number of days since the trip start.
@@ -342,7 +344,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
                     />
                   </label>
                 </div>
-              </section>
+              </DrawerSection>
             </div>
           </aside>
         </div>

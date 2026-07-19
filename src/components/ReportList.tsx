@@ -6,6 +6,8 @@ import { exportBackup, importBackup, lastBackupAt, backupIsStale } from '../back
 import { getProfile, saveProfile, type Profile } from '../profile'
 import { expenseMatches } from '../search'
 import Icon from './icons'
+import DrawerSection from './DrawerSection'
+import { ArrowDivider, HeaderNodeArt } from './decorative'
 
 interface ReportSummary {
   report: Report
@@ -126,6 +128,7 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
   return (
     <>
       <header className="topbar">
+        <HeaderNodeArt />
         <div className="topbar-title">
           <span className="logo">
             <Icon name="receipt" size={24} />
@@ -177,8 +180,7 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
             </div>
 
             <div className="drawer-section">
-              <section className="drawer-subsection">
-                <h3>Profile</h3>
+              <DrawerSection title="Profile">
                 <p className="muted">
                   Optional — fill in what applies and it'll appear on the summary page of your PDF
                   exports.
@@ -221,10 +223,11 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
                     />
                   </label>
                 </div>
-              </section>
+              </DrawerSection>
 
-              <section className="drawer-subsection">
-                <h3>About</h3>
+              <ArrowDivider />
+
+              <DrawerSection title="About">
                 <p>
                   Receipts Express scans your receipts with on-device OCR, organizes them into expense
                   reports, and exports polished PDFs.
@@ -235,7 +238,7 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
                   off-device copy.
                 </p>
                 <p className="muted">Version {__APP_VERSION__}</p>
-              </section>
+              </DrawerSection>
             </div>
 
             <footer className="drawer-footer">
