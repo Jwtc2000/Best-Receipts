@@ -144,6 +144,8 @@ export function validateBackup(
 
 const LAST_BACKUP_KEY = 'br.lastBackupAt'
 const STALE_AFTER_MS = 7 * 24 * 60 * 60 * 1000
+const BACKUP_WARNING_DISMISSED_KEY = 'br.backupWarningDismissedAt'
+const WARNING_SNOOZE_MS = 5 * 24 * 60 * 60 * 1000
 
 export function lastBackupAt(): number | null {
   const raw = localStorage.getItem(LAST_BACKUP_KEY)
@@ -153,6 +155,17 @@ export function lastBackupAt(): number | null {
 export function backupIsStale(): boolean {
   const last = lastBackupAt()
   return last === null || Date.now() - last > STALE_AFTER_MS
+}
+
+/** Snooze the stale-backup warning — it won't reappear for WARNING_SNOOZE_MS. */
+export function dismissBackupWarning(): void {
+  localStorage.setItem(BACKUP_WARNING_DISMISSED_KEY, String(Date.now()))
+}
+
+export function shouldShowBackupWarning(): boolean {
+  if (!backupIsStale()) return false
+  const dismissedAt = localStorage.getItem(BACKUP_WARNING_DISMISSED_KEY)
+  return dismissedAt === null || Date.now() - Number(dismissedAt) > WARNING_SNOOZE_MS
 }
 
 async function buildBackupBlob(): Promise<Blob> {
@@ -184,7 +197,10 @@ export async function exportBackup(): Promise<boolean> {
   const name = `receipts-express-backup-${new Date().toISOString().slice(0, 10)}.json`
   const file = new File([blob], name, { type: 'application/json' })
   const handedOff = await shareOrDownloadFile(file, 'Receipts Express backup')
-  if (handedOff) localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()))
+  if (handedOff) {
+    localStorage.setItem(LAST_BACKUP_KEY, String(Date.now()))
+    localStorage.removeItem(BACKUP_WARNING_DISMISSED_KEY)
+  }
   return handedOff
 }
 

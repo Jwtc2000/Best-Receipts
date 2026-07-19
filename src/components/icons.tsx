@@ -14,6 +14,7 @@ export type IconName =
   | 'warning'
   | 'express-arrow'
   | 'search'
+  | 'backup'
 
 const PATHS: Record<IconName, ReactNode> = {
   receipt: (
@@ -86,6 +87,13 @@ const PATHS: Record<IconName, ReactNode> = {
     <>
       <circle cx="11" cy="11" r="8" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </>
+  ),
+  backup: (
+    <>
+      <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
     </>
   ),
 }

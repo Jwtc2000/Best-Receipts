@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Expense, Report } from '../types'
 import { formatMoney, formatTotal, newId, todayIso } from '../types'
 import { listReports, listExpenses, saveReport, deleteReport } from '../db'
-import { exportBackup, importBackup, lastBackupAt, backupIsStale } from '../backup'
+import { exportBackup, importBackup, lastBackupAt, dismissBackupWarning, shouldShowBackupWarning } from '../backup'
 import { getProfile, saveProfile, type Profile } from '../profile'
 import { expenseMatches } from '../search'
 import Icon from './icons'
@@ -145,6 +145,14 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
         >
           <Icon name={searchOpen ? 'close' : 'search'} size={22} />
         </button>
+        <button
+          className="icon-btn"
+          aria-label={backupBusy ? 'Backing up…' : 'Back up receipts'}
+          onClick={() => void doBackup()}
+          disabled={backupBusy}
+        >
+          <Icon name="backup" size={22} />
+        </button>
         <button className="icon-btn menu-btn" aria-label="Menu" onClick={() => setMenuOpen(true)}>
           <Icon name="menu" size={22} />
         </button>
@@ -237,12 +245,21 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
                   never uploaded anywhere. Use the Backup card on the home screen to keep an
                   off-device copy.
                 </p>
+                <p className="muted">
+                  As a browser-based app, that local storage isn't guaranteed to last — clearing
+                  site data, switching browsers or devices, or an OS storage cleanup can erase it
+                  permanently, with no server copy to restore from. Back up regularly.
+                </p>
                 <p className="muted">Version {__APP_VERSION__}</p>
               </DrawerSection>
             </div>
 
             <footer className="drawer-footer">
-              Assembled by Jordan WT Campbell with Claude Code
+              <p>
+                Independent personal project — no affiliation with, endorsement from, or approval
+                by FedEx or any employer.
+              </p>
+              <p>Exported PDFs are your responsibility once saved or shared outside this app.</p>
             </footer>
           </aside>
         </div>
@@ -321,13 +338,13 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
           void backupTick // re-read localStorage after each backup
           const hasData = summaries.some((s) => s.count > 0)
           const last = lastBackupAt()
-          const stale = hasData && backupIsStale()
+          const showWarning = hasData && shouldShowBackupWarning()
           return (
-            <section className={`backup-card${stale ? ' stale' : ''}`}>
+            <section className={`backup-card${showWarning ? ' stale' : ''}`}>
               <div className="backup-info">
                 <h3>
-                  {stale && <Icon name="warning" size={16} />}
-                  {stale ? 'Back up your receipts' : 'Backup'}
+                  {showWarning && <Icon name="warning" size={16} />}
+                  {showWarning ? 'Back up your receipts' : 'Backup'}
                 </h3>
                 <p className="muted">
                   {backupNote ??
@@ -345,6 +362,17 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
                 <button className="btn ghost small" onClick={() => restoreInput.current?.click()} disabled={backupBusy}>
                   Restore
                 </button>
+                {showWarning && (
+                  <button
+                    className="btn ghost small"
+                    onClick={() => {
+                      dismissBackupWarning()
+                      setBackupTick((t) => t + 1)
+                    }}
+                  >
+                    Not now
+                  </button>
+                )}
               </div>
               <input
                 ref={restoreInput}
