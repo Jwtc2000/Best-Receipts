@@ -41,9 +41,12 @@ This markdown file represents the content of the interactive slide deck designed
 
 #### Key Pilot Features:
 * **On-Device OCR**: [Tesseract.js](https://tesseract.projectnaptha.com/) scans receipts and extracts fields locally. No external APIs, no cloud processing.
+    > **What is OCR?** OCR (Optical Character Recognition) is the automated technology that reads the text inside receipt images (merchant names, dates, and amounts) and converts it into editable digital text. Running it fully on-device via WebAssembly means no images or transcripts are ever sent over the network to external systems.
 * **Reports Manager**: Create, name, and drag-and-drop receipts to reorder. Group expenses easily by business trip.
 * **Secure Storage**: Data stays safely in your local browser sandbox ([IndexedDB](https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API)). Zero servers are involved.
 * **Local PDF Export**: Generates a comprehensive trip summary followed by full-page receipt images.
+
+![Receipts Express expense editor after scanning a receipt, with merchant, amount, and date auto-filled by on-device OCR](../assets/receipt_scanner_view.jpg)
 
 ---
 
@@ -65,6 +68,12 @@ Receipts Express's pilot governance structure is formatted after the **AI Pilot 
 | **Data Egress Control** | Enforced by Content-Security-Policy (`connect-src 'self'`) |
 | **Human-in-the-Loop** | Active (User must verify and edit OCR drafts before saving) |
 
+> **How Governance Applies to this Pilot:**
+> * **Data Classification**: Receipts contain names, merchant locations, purchase itemizations, and partial card numbers. Since this is Confidential employee financial data, it is governed under strict corporate privacy requirements. Receipts Express complies by keeping all data local inside your browser profile's sandboxed storage.
+> * **AI Engine Location**: Corporate policies restrict transmitting private data to unapproved cloud AI endpoints. Receipts Express mitigates this by self-hosting the Tesseract.js OCR engine locally. All text recognition runs on your device inside your browser sandbox, requiring no internet connection.
+> * **Data Egress Control**: Policy compliance is enforced at the browser level via a Content-Security-Policy (CSP). The header `connect-src 'self'` programmatically blocks the browser from sending data to any external server or API, meaning even a compromised dependency cannot exfiltrate your receipts.
+> * **Human-in-the-Loop**: AI algorithms can misread numbers or dates. To ensure financial audit readiness, the OCR engine only populates editable draft inputs. The user is the responsible human owner who must review and manually verify all dates and amounts before exporting the PDF.
+
 ---
 
 ## Slide 5: PWA Installation Guide
@@ -74,20 +83,22 @@ Receipts Express's pilot governance structure is formatted after the **AI Pilot 
 
 Running the web app as an installed PWA grants it **persistent storage protection**, signaling to the mobile OS to protect database files from automatic eviction.
 
-#### 📱 iOS (Safari)
+#### iOS (Safari)
 1. Open the app link in Safari.
-2. Tap the **Share** button `📤` in the browser toolbar.
-3. Scroll down and select **Add to Home Screen** `➕`.
+2. Tap the **Share** button (box with up-arrow) in the browser toolbar.
+3. Scroll down and select **Add to Home Screen** (plus icon).
 
-#### 🤖 Android (Chrome)
+#### Android (Chrome)
 1. Open the app link in Chrome.
 2. Tap the **Menu** icon `⠇` (three vertical dots).
-3. Select **Install app** `📥`.
+3. Select **Install app** (download icon).
 
-#### 🖥️ Desktop (Chrome / Edge / Safari)
+#### Desktop (Chrome / Edge / Safari)
 1. Open the app link in Chrome or Edge.
 2. Click the **Install icon** inside the right side of the address bar.
 3. Alternatively, select **Install Receipts Express** from the browser's settings menu.
+
+![Receipts Express expense report, with entries grouped and totaled by day of the trip](../assets/expense_reports_view.jpg)
 
 ---
 
@@ -116,9 +127,11 @@ Receipts Express includes local backup controls to bundle all database records &
 
 To ensure zero loss of receipt data while piloting the web application, participants must adhere to the following backup guidelines:
 
-1. **Save JSON Backups Externally**: When clicking "Back up now", the app generates a single `.json` file containing all data. **Recommendation:** Save this file directly into corporate/secured network storage (such as OneDrive, Google Drive, iCloud, or SharePoint) under an `Expenses-Backup` folder.
+1. **Save JSON Backups — Local First, Then Cloud**: When clicking "Back up now", the app generates a single `.json` file containing all data. **Easiest:** save it straight to your device's local storage (Downloads or Files app) first — no login, no upload wait. **Then**, for redundancy, copy that same file into corporate/secured cloud storage under an `Expenses-Backup` folder, in this order: OneDrive, then Google Drive, then iCloud or SharePoint — whichever your organization provides.
 2. **Backup Frequency Rule**: Always export a fresh backup after scanning new receipts on a trip. Do not ignore the in-app "Backup stale" warning. Treat Receipts Express as a **capture utility, not a long-term archive**. Export the final expense report PDF promptly.
 3. **Cross-Device Restore**: If you upgrade your phone or switch browsers, export a backup JSON from your old device and click **Restore from file** on the new device to seamlessly merge all your reports, receipts, and images.
+
+![Receipts Express home screen showing the Back up your receipts card](../assets/backup_view.jpg)
 
 ---
 
@@ -128,8 +141,15 @@ To ensure zero loss of receipt data while piloting the web application, particip
 *How to get started and contribute safely*
 
 #### Safe Real-Trip Demo Guidelines:
-* [ ] **Use Production URL Only**: Always run the pilot via the live HTTPS link. Never scan real corporate receipts in local dev mode (where the Content-Security-Policy is bypassed for hot reloading).
+* [ ] **Use the Live HTTPS Link**: Run the app via the production URL: [https://jwtc2000.github.io/Receipts-Express/](https://jwtc2000.github.io/Receipts-Express/) (also linked at the top of the repository). This live site enforces a browser-level Content-Security-Policy (CSP) that blocks all outgoing data.
+* [ ] **What is "Dev Mode"?**: Regular pilot participants will not be using dev mode. "Dev mode" refers only to developers running raw source code on their personal laptops (using `npm run dev`) where browser blocks are bypassed to allow styling hot-reloads. The live website is completely secure.
 * [ ] **Policy Compliance Window**: Since reports must be filed by the Wednesday following a trip, scan receipts as they happen, export the complete PDF/CSV on the final day of travel, upload it, and then clear the data from the PWA.
+    > **How to clear it:** Open the Menu on the home screen and tap the trash icon on the report to delete it (and all its receipt images) — you'll be asked to confirm. To wipe everything in one step instead, use your browser's site settings → "Clear site data" for this origin.
+    > **Why:** once a report is exported and safely backed up, there's no reason for corporate receipt images or OCR'd text to keep sitting on your device. Deleting it shortens the window during which that data could be exposed if the device is lost, shared, or compromised — keeping you inside the <10-day retention target.
 * [ ] **Minimize Storage Duration**: Adhering to the Wednesday deadline ensures corporate financial data lives in the local browser database (IndexedDB) for less than 10 days, minimizing security exposure.
-* [ ] **Daily Cloud Backups**: Export a JSON backup file to corporate OneDrive or Google Drive daily during travel. This prevents data loss in case the browser clears site caches.
+* [ ] **Daily Backups — Local First, Then Cloud**: Export a JSON backup daily during travel. Easiest option: save it straight to your device's local storage (Downloads or Files app) — no login, no upload wait. Then, for redundancy, copy that same file to corporate cloud storage the same day, in this order: OneDrive, then Google Drive, then iCloud or SharePoint — whichever your organization provides.
 * [ ] **Verify and Report**: Cross-check OCR data values against the physical receipts and log formatting suggestions.
+
+---
+
+*Introduction to Receipts Express | Github: [Jwtc2000](https://github.com/Jwtc2000) (Bug reports: [Jwtc2000@users.noreply.github.com](mailto:Jwtc2000@users.noreply.github.com)) | Inspired by [AI-Efficiency](https://github.com/arigatoexpress/AI-Efficiency)*

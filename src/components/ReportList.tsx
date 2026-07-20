@@ -257,6 +257,20 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
                   site data, switching browsers or devices, or an OS storage cleanup can erase it
                   permanently, with no server copy to restore from. Back up regularly.
                 </p>
+                <p style={{ marginTop: '0.75rem' }}>
+                  <a
+                    href="./docs/pilot-deck.html"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      color: '#2dd4bf',
+                      textDecoration: 'underline',
+                      fontWeight: 600,
+                    }}
+                  >
+                    View Pilot Slide Deck
+                  </a>
+                </p>
                 <p className="muted">Version {__APP_VERSION__}</p>
               </DrawerSection>
             </div>
