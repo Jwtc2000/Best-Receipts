@@ -57,9 +57,45 @@ Every claim below is something you can verify by reading this repository, not so
 
 ---
 
+## Continuous Integration & Deployment (CI/CD)
+
+**In plain terms:** every time code is pushed or a pull request is opened, two independent automated systems inspect it before it's allowed anywhere near the live app. One lives on GitHub's own servers and handles "does it work" (does it compile, do the tests pass, is the deploy safe to run). The other lives on a private machine and handles "is it safe" (no leaked secrets, no risky code patterns, no vulnerable dependencies). Both have to say yes before a change can merge into `main`; if either says no, the merge is blocked.
+
+**In technical terms:** the two pipelines are deliberately non-overlapping — neither repeats a check the other already owns. Full reasoning and configuration notes live in [ci/README.md](./ci/README.md); the summary below is what each one runs.
+
+### GitHub Actions — [`.github/workflows/deploy.yml`](./.github/workflows/deploy.yml)
+
+Hosted on GitHub's own runners. Every Action is pinned to a full 40-character commit SHA (not a mutable version tag like `@v4`), and Dependabot proposes updates to those pins weekly with a 7-day cooldown before a new release is trusted.
+
+| Job | Runs on | What it does |
+| --- | --- | --- |
+| **`test`** | Every push and every pull request | Checks out the code, installs dependencies (`npm ci`), then runs `npm run typecheck` (TypeScript type checking), `npm test` (the Vitest test suite), and `npm audit --audit-level=high` (fails the build if any dependency has a known high-or-worse severity vulnerability). |
+| **`build`** | Only a push to `main`, or a manual run (`workflow_dispatch`) | Runs `npm run build` to compile the production bundle, then hands it to GitHub Pages' `configure-pages`/`upload-pages-artifact` actions. Never runs on PRs or feature branches, so in-progress work can never reach the live site. |
+| **`deploy`** | Same restriction as `build`, and only after `build` succeeds | Publishes the built artifact to GitHub Pages using GitHub's official `deploy-pages` action, with `id-token: write` permission scoped to just this job. |
+
+Permissions are minimal by default (`contents: read` at the workflow level), each job only gains the extra permission it needs, and `persist-credentials: false` on checkout means the GitHub token never lingers after the checkout step. Concurrency groups cancel superseded runs of the same job on the same ref, and Pages deploys are serialized so two deploys can never race each other.
+
+### Jenkins — [`Jenkinsfile`](./Jenkinsfile)
+
+Hosted on a separate, self-hosted machine (reachable only over a private Tailscale network, not the public internet), running the same checks on every push and PR unless noted as main-only:
+
+| Stage | Tool | What it checks |
+| --- | --- | --- |
+| **Secrets scan** | [gitleaks](https://github.com/gitleaks/gitleaks) | Scans the working tree for accidentally committed credentials, tokens, and (via this repo's custom rules) contributor-identifying paths/hostnames. |
+| **SAST** *(Static Application Security Testing)* | [semgrep](https://semgrep.dev/) | Pattern-matches the TypeScript/React source against known-bad code patterns, including the OWASP Top Ten. |
+| **Workflow audit** | [zizmor](https://github.com/zizmorcore/zizmor) | Audits `.github/workflows/` itself for supply-chain and permissions issues — auditing the auditor, in effect. |
+| **Dockerfile lint** | [hadolint](https://github.com/hadolint/hadolint) | Lints the Jenkins agent's own `ci/agent/Dockerfile` for unsafe or wasteful Docker practices. |
+| **Supply chain** | [osv-scanner](https://github.com/google/osv-scanner) | Checks every dependency in `package-lock.json` against the OSV (Open Source Vulnerabilities) database. |
+| **Secrets scan (full history)** — *main-only* | gitleaks | Scans every commit ever pushed to `main`, not just the current working tree — slower, so it's reserved for main rather than every PR. |
+| **SBOM** — *main-only* | [syft](https://github.com/anchore/syft) | Generates a CycloneDX Software Bill of Materials listing every dependency, archived as a build artifact. |
+
+Branch protection on `main` requires **both** systems to report success before a merge is allowed: GitHub Actions' `test` job, and Jenkins' `continuous-integration/jenkins/pr-merge` status check. Neither `build` nor `deploy` is a required check, since both intentionally skip on PRs — requiring them would deadlock every merge.
+
+---
+
 ## How It Works Under the Hood
 
-| Component | Technology | Layman's Explanation |
+| Component | Technology | In Plain Terms |
 | --- | --- | --- |
 | **User Interface (UI)** | React 18 + TypeScript + Vite | **React** handles rendering the screens and components; **TypeScript** is a programming language that catches bugs early by checking code types; **Vite** is a packager (build tool) that compiles files for the web. |
 | **Receipt OCR** | Tesseract.js (runs fully in-browser) | An offline engine that runs in-browser to transcribe text out of pictures using **WebAssembly (WASM)**, which lets native binary code run fast in the browser. |
