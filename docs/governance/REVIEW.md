@@ -85,7 +85,7 @@ This checklist prepares the **Receipts Express** application for governance revi
 
 ## 6. Meeting Demo Readiness
 
-* **Demo uses synthetic or approved data**: Yes, only dummy receipts will be used for demonstrations.
+* **Demo uses synthetic or approved data**: Yes. Demonstrations use synthetic data, while the pilot allows real-world receipt capture during travel. Data exposure is limited to under 10 days in the local browser sandbox, aligned with corporate deadlines (reports submitted by Wednesday post-trip).
 * **Demo script is written**: TBD.
 * **Known limitations are stated up front**: Yes, explicitly listed (offline, client-side, storage is subject to eviction).
 * **No secrets or private dashboards are visible**: Verified.

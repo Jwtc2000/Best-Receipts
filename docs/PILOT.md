@@ -15,6 +15,10 @@
 > ([arigatoexpress/AI-Efficiency](https://github.com/arigatoexpress/AI-Efficiency)) —
 > credit to that project for the governance framework this proposal is
 > formatted against.
+>
+> **Pilot Slide Decks**:
+> * **[Interactive Presentation Deck (HTML)](./pilot-deck.html)**: A rich, animated web slideshow for meetings and sharing.
+> * **[GitHub Presentation Version (Markdown)](./PILOT_DECK.md)**: A quick-read text format for viewing directly in the repository.
 
 ## 1. Pilot Overview
 
