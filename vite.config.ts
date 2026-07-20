@@ -114,6 +114,14 @@ export default defineConfig({
         // the service worker (forcing a re-download for every app user) on
         // every unrelated slide-deck edit.
         globIgnores: ['tesseract/**', 'docs/**'],
+        // vite-plugin-pwa's generateSW registers an SPA navigation route that
+        // serves index.html (the app shell) for every navigation request. The
+        // pilot deck is a real, standalone page under docs/, so without this
+        // the deck link keeps the URL bar at docs/pilot-deck.html but renders
+        // the app instead. Exempt docs/ so the browser fetches the real page.
+        // Matched against the full pathname, which includes the /<repo>/ base
+        // on GitHub Pages, so this stays unanchored rather than /^\/docs\//.
+        navigateFallbackDenylist: [/\/docs\//],
         runtimeCaching: [
           {
             urlPattern: /\/tesseract\//,
