@@ -64,6 +64,10 @@ body {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
+.topbar > .icon-btn {
+  flex-shrink: 0;
+}
+
 .topbar-planes {
   /* inset: 0 already confines this exactly to the topbar's box, so it
      never needs `overflow: hidden` on .topbar itself — which would
@@ -261,7 +265,6 @@ body {
 .topbar h1 {
   font-size: 1.15rem;
   font-weight: 700;
-  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -272,20 +275,27 @@ body {
   align-items: center;
   gap: 10px;
   flex: 1;
+  min-width: 0;
 }
 
 .logo {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .topbar-title h1 {
-  flex: 0 0 auto;
+  /* Must be allowed to shrink (and min-width:0, since flex items default to
+     min-width:auto) so the title ellipsizes on narrow screens instead of
+     pushing the search/backup/menu buttons off the edge of the topbar. */
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .express-arrow {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   /* Plain white (inherited from .topbar), not a separate accent color:
      the old light-orange accent (#fdba74) had strong contrast against the
      previous solid teal header but nearly vanishes (1.74:1) against the

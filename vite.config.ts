@@ -1,6 +1,7 @@
-import { readFileSync } from 'node:fs'
+import { readFileSync, mkdirSync, copyFileSync, readdirSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, type Plugin, type ResolvedConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -32,6 +33,35 @@ function cspPlugin(): Plugin {
   }
 }
 
+// The pilot slide deck (docs/pilot-deck.html) is linked from the app's About
+// drawer, but Vite's build only ever outputs the app itself — docs/ and the
+// repo-root assets/ screenshots it references aren't part of the bundle, so
+// the link 404s once deployed. Copy just what the deck needs into dist/ so
+// the link resolves the same in production as it does from the repo.
+function copyPilotDeckPlugin(): Plugin {
+  const root = fileURLToPath(new URL('.', import.meta.url))
+  let outDir = ''
+  return {
+    name: 'copy-pilot-deck',
+    apply: 'build',
+    configResolved(config: ResolvedConfig) {
+      // Respect whatever outDir this build actually resolved to (normally
+      // dist/, but e.g. csp.test.ts points it at a temp directory instead).
+      outDir = resolve(config.root, config.build.outDir)
+    },
+    closeBundle() {
+      mkdirSync(resolve(outDir, 'docs'), { recursive: true })
+      copyFileSync(resolve(root, 'docs/pilot-deck.html'), resolve(outDir, 'docs/pilot-deck.html'))
+      mkdirSync(resolve(outDir, 'assets'), { recursive: true })
+      for (const file of readdirSync(resolve(root, 'assets'))) {
+        if (file.endsWith('.jpg')) {
+          copyFileSync(resolve(root, 'assets', file), resolve(outDir, 'assets', file))
+        }
+      }
+    },
+  }
+}
+
 export default defineConfig({
   // GitHub Pages serves a project site from /<repo>/ — the deploy workflow
   // sets BASE_PATH from the repo name; local dev/build stays at the root.
@@ -41,6 +71,7 @@ export default defineConfig({
   },
   plugins: [
     cspPlugin(),
+    copyPilotDeckPlugin(),
     react(),
     VitePWA({
       registerType: 'prompt',
@@ -77,7 +108,12 @@ export default defineConfig({
         // OCR engine files are large, so they're cached on first use
         // instead of being precached (see runtimeCaching below)
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        globIgnores: ['tesseract/**'],
+        // Neither is part of the app itself: the OCR engine is cached on
+        // first use instead (see runtimeCaching below), and the pilot deck
+        // is a standalone static page — precaching it would otherwise bump
+        // the service worker (forcing a re-download for every app user) on
+        // every unrelated slide-deck edit.
+        globIgnores: ['tesseract/**', 'docs/**'],
         runtimeCaching: [
           {
             urlPattern: /\/tesseract\//,

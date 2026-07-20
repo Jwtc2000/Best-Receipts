@@ -51,7 +51,6 @@
       user-select: none;
     }
 
-    /* Presentation Container */
     .deck-container {
       position: relative;
       width: 100%;
@@ -59,7 +58,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 2.5rem;
+      padding: 1.25rem 2rem;
       background: var(--dark-gradient);
     }
 
@@ -120,16 +119,26 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 2rem 0;
+      margin: 0.5rem 0;
       perspective: 1200px;
+      overflow: hidden;
+    }
+
+    .slides-inner {
+      position: relative;
+      width: 1100px;
+      height: 680px;
+      transform-origin: center center;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .slide {
       position: absolute;
       width: 100%;
-      max-width: 1100px;
       height: 100%;
-      max-height: 620px;
       opacity: 0;
       visibility: hidden;
       transform: scale(0.95) translateZ(-60px);
@@ -261,7 +270,7 @@
       align-items: center;
       z-index: 10;
       border-top: 1px solid rgba(255, 255, 255, 0.06);
-      padding-top: 1.5rem;
+      padding-top: 0.75rem;
     }
 
     .footer-meta {
@@ -336,7 +345,6 @@
       transform: none;
     }
 
-    /* Presentation Theme Specific Styles */
     .slide-title-large {
       font-size: 4.5rem !important;
       font-weight: 900 !important;
@@ -436,42 +444,16 @@
       align-items: center;
     }
 
-    /* Background plane animation for Title slide */
-    .plane-canvas {
+    /* Interactive Network Graph Background for Title slide */
+    .network-canvas {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden;
       z-index: 0;
       pointer-events: none;
     }
-
-    .floating-plane {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      color: rgba(255, 255, 255, 0.15);
-      fill: currentColor;
-    }
-
-    @keyframes fly-diagonal-1 {
-      0% { transform: translate(-50px, 400px) rotate(15deg); opacity: 0; }
-      10% { opacity: 0.3; }
-      90% { opacity: 0.3; }
-      100% { transform: translate(1200px, -50px) rotate(15deg); opacity: 0; }
-    }
-
-    @keyframes fly-diagonal-2 {
-      0% { transform: translate(-50px, 100px) rotate(5deg); opacity: 0; }
-      15% { opacity: 0.2; }
-      85% { opacity: 0.2; }
-      100% { transform: translate(1200px, 150px) rotate(5deg); opacity: 0; }
-    }
-
-    .plane-1 { animation: fly-diagonal-1 25s linear infinite; }
-    .plane-2 { animation: fly-diagonal-2 30s linear infinite; animation-delay: -10s; }
 
     /* Interactive Backup Demo */
     .backup-demo-container {
@@ -523,6 +505,119 @@
       gap: 4px;
     }
 
+    .screenshot-preview {
+      width: 100%;
+      max-width: 250px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      transform: rotate(2deg) translateY(0);
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease;
+      animation: float-slow 6s ease-in-out infinite alternate;
+      border: 4px solid #1e293b;
+    }
+
+    .screenshot-preview:hover {
+      transform: rotate(0deg) scale(1.05) translateY(-5px);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    }
+
+    @keyframes float-slow {
+      0% { transform: rotate(1deg) translateY(0); }
+      100% { transform: rotate(3deg) translateY(-6px); }
+    }
+
+    .slide-icon {
+      width: 1.1em;
+      height: 1.1em;
+      vertical-align: -0.15em;
+      display: inline-block;
+      stroke: currentColor;
+      fill: none;
+      margin-right: 6px;
+    }
+
+    /* Hover/focus info tooltip (used for the "clear PWA data" explainer) */
+    .info-tip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      font-style: normal;
+      cursor: help;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    .info-tip .tip-bubble {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(6px);
+      width: 320px;
+      max-width: 60vw;
+      background: #0f172a;
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      font-weight: 400;
+      font-style: normal;
+      color: #e2e8f0;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 25;
+      text-align: left;
+      pointer-events: none;
+    }
+
+    .info-tip .tip-bubble strong {
+      color: #5eead4;
+    }
+
+    .info-tip .tip-bubble::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #0f172a;
+    }
+
+    .info-tip:hover .tip-bubble,
+    .info-tip:focus .tip-bubble,
+    .info-tip:focus-visible .tip-bubble {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Animation classes triggered when slide becomes active */
+    .slide-image-container {
+      opacity: 0;
+      transform: translateX(45px) scale(0.95);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s,
+                  transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .slide.active .slide-image-container {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+
     /* Responsive adjustments */
     @media (max-height: 700px) {
       .deck-container { padding: 1.5rem; }
@@ -532,6 +627,167 @@
       p.lead { font-size: 1rem; }
       .slide-content-grid { gap: 1.5rem; }
       .glass-card { padding: 1.25rem; }
+    }
+
+    @media (max-width: 768px) {
+      .deck-container {
+        padding: 0.75rem;
+        height: auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .slides-wrapper {
+        margin: 0.5rem 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex-grow: 1;
+        display: block;
+        height: auto;
+        min-height: 450px;
+      }
+
+      .slides-inner {
+        position: relative;
+        width: 100% !important;
+        height: auto !important;
+        transform: none !important;
+        margin: 0 !important;
+        display: block;
+      }
+
+      .slide {
+        position: relative !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        opacity: 0;
+        display: none !important;
+        padding: 1.25rem 0.75rem !important;
+        border-radius: 12px;
+        box-sizing: border-box;
+      }
+
+      .slide.active {
+        opacity: 1;
+        display: flex !important;
+        flex-direction: column;
+        justify-content: flex-start;
+      }
+
+      /* Stack grid layouts */
+      .slide-content-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+      }
+
+      /* Reduce header/footer margins */
+      .deck-header {
+        padding: 0.5rem 0;
+        margin-bottom: 0.5rem;
+        height: auto;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .brand-title span {
+        font-size: 0.95rem;
+      }
+
+      /* Slide text adjustments */
+      h1.slide-title {
+        font-size: 1.6rem;
+        margin-bottom: 0.35rem;
+        line-height: 1.2;
+      }
+      
+      h1.slide-title-large {
+        font-size: 2.25rem !important;
+        line-height: 1.1 !important;
+      }
+
+      h2.slide-subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+
+      p.lead {
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .glass-card {
+        padding: 0.75rem !important;
+        border-radius: 10px;
+      }
+
+      /* Specific component sizes */
+      .screenshot-preview {
+        max-width: 150px;
+        margin: 0.5rem auto 0;
+        display: block;
+      }
+
+      .fancy-list {
+        font-size: 0.82rem !important;
+        gap: 0.35rem !important;
+      }
+
+      .slide-table td, .slide-table th {
+        padding: 0.4rem 0.5rem !important;
+        font-size: 0.75rem !important;
+      }
+
+      .backup-demo-card {
+        padding: 0.5rem 0.75rem !important;
+      }
+
+      .deck-footer {
+        padding: 0.5rem 0 0 0;
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+        height: auto;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .footer-meta {
+        font-size: 0.7rem !important;
+        text-align: center;
+      }
+
+      .controls-wrapper {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      /* Tooltip bubble on mobile: anchoring it relative to the tiny 17px
+         icon (as the desktop version does) pushes it mostly off-screen
+         whenever the icon sits near a screen edge — the further "right"
+         offset is computed against the icon's own box, not the viewport.
+         Fixed + centered on the viewport sidesteps that entirely. */
+      .info-tip .tip-bubble {
+        position: fixed;
+        left: 50%;
+        top: auto;
+        bottom: 96px;
+        right: auto;
+        transform: translate(-50%, 6px);
+        width: min(320px, 88vw);
+        max-width: none;
+      }
+      .info-tip:hover .tip-bubble,
+      .info-tip:focus .tip-bubble,
+      .info-tip:focus-visible .tip-bubble {
+        transform: translate(-50%, 0);
+      }
+      .info-tip .tip-bubble::after {
+        /* The pointer arrow assumed the bubble sat directly above the
+           icon — no longer true once it's centered on the viewport. */
+        display: none;
+      }
     }
   </style>
 </head>
@@ -563,13 +819,11 @@
 
     <!-- Slides Wrapper -->
     <main class="slides-wrapper">
+      <div class="slides-inner" id="slidesInner">
       
       <!-- Slide 1: Cover -->
       <div class="slide active" id="slide-1">
-        <div class="plane-canvas">
-          <svg class="floating-plane plane-1" viewBox="0 0 24 24"><path d="M22 2L2 8.66L11.5 12.5L16 21.16L22 2Z" fill="currentColor"/></svg>
-          <svg class="floating-plane plane-2" viewBox="0 0 24 24"><path d="M22 2L2 8.66L11.5 12.5L16 21.16L22 2Z" fill="currentColor"/></svg>
-        </div>
+        <canvas id="networkCanvas" class="network-canvas"></canvas>
         <div style="z-index: 1; text-align: center;">
           <h1 class="slide-title slide-title-large">Receipts Express</h1>
           <h2 class="slide-subtitle" style="color: #cbd5e1; font-weight: 400;">Standardized Receipt-to-PDF Capture</h2>
@@ -611,44 +865,31 @@
         <h1 class="slide-title">Enter Receipts Express</h1>
         <h2 class="slide-subtitle">A fast, private utility running entirely on your device</h2>
         
-        <div class="slide-content-grid" style="grid-template-columns: 1.2fr 0.8fr;">
-          <div class="glass-card accent-card">
+        <div class="slide-content-grid" style="grid-template-columns: 1.25fr 0.75fr; align-items: center;">
+          <div class="glass-card accent-card" style="height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 2rem;">
             <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 1.25rem;">Key Pilot Features</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
               <div>
-                <strong style="color: #ffffff; display: block; margin-bottom: 0.4rem;">📷 On-Device OCR</strong>
-                <span style="font-size: 0.9rem; color: #94a3b8;">Tesseract.js scans receipts and extracts fields locally. No external APIs.</span>
+                <strong style="color: #ffffff; display: block; margin-bottom: 0.4rem;"><svg class="slide-icon" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>On-Device OCR<span class="info-tip" tabindex="0" aria-label="What is OCR?">?<span class="tip-bubble"><strong>OCR (Optical Character Recognition):</strong> the automated technology that reads the text inside receipt images (merchant names, dates, and amounts) and converts it into editable digital text. Running it fully on-device via WebAssembly means no images or transcripts are ever sent over the network to external systems.</span></span></strong>
+                <span style="font-size: 0.9rem; color: #cbd5e1;">Tesseract.js scans receipts and extracts merchant, date, and amount fields locally.</span>
               </div>
               <div>
-                <strong>📂 Reports Manager</strong>
-                <span style="font-size: 0.9rem; color: #94a3b8;">Create, name, and drag-and-drop receipts to reorder. Group by business trip.</span>
+                <strong style="color: #ffffff; display: block; margin-bottom: 0.4rem;"><svg class="slide-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Reports Manager</strong>
+                <span style="font-size: 0.9rem; color: #cbd5e1;">Create, name, and drag-and-drop receipts to reorder. Group expenses easily.</span>
               </div>
               <div>
-                <strong>🔒 Secure Storage</strong>
-                <span style="font-size: 0.9rem; color: #94a3b8;">Data stays safely in your local browser sandbox (IndexedDB). Zero servers.</span>
+                <strong style="color: #ffffff; display: block; margin-bottom: 0.4rem;"><svg class="slide-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Secure Storage</strong>
+                <span style="font-size: 0.9rem; color: #cbd5e1;">Data stays safely in your local browser sandbox (IndexedDB). Zero servers.</span>
               </div>
               <div>
-                <strong>📄 Local PDF Export</strong>
-                <span style="font-size: 0.9rem; color: #94a3b8;">Generates a comprehensive trip summary followed by full-page receipt images.</span>
+                <strong style="color: #ffffff; display: block; margin-bottom: 0.4rem;"><svg class="slide-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Local PDF Export</strong>
+                <span style="font-size: 0.9rem; color: #cbd5e1;">Generates a polished trip summary followed by full-page receipt images.</span>
               </div>
             </div>
           </div>
           
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div class="glass-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              <div>
-                <h4 style="font-size: 1rem;">Camera Scan</h4>
-                <p style="font-size: 0.8rem; color: #94a3b8;">Fast image-to-form pre-filling</p>
-              </div>
-            </div>
-            <div class="glass-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              <div>
-                <h4 style="font-size: 1rem;">Content Security</h4>
-                <p style="font-size: 0.8rem; color: #94a3b8;">CSP blocks all egress traffic</p>
-              </div>
-            </div>
+          <div class="slide-image-container">
+            <img src="../assets/receipt_scanner_view.jpg" alt="Receipts Express expense editor after scanning a receipt, with merchant, amount, and date auto-filled by on-device OCR" class="screenshot-preview">
           </div>
         </div>
       </div>
@@ -679,19 +920,19 @@
             <h3 style="font-family: var(--font-display); font-size: 1.25rem; margin-bottom: 1rem; color: #ffffff;">Governance Snapshot</h3>
             <table class="slide-table" style="margin-top: 0;">
               <tr>
-                <td><strong>Data Classification</strong></td>
+                <td><strong>Data Classification</strong> <span class="info-tip" tabindex="0" aria-label="Governance application: Data Classification">?<span class="tip-bubble"><strong>Data Classification:</strong> receipts contain names, merchant locations, purchase itemizations, and partial card numbers. Since this is Confidential employee financial data, it is governed under strict corporate privacy requirements. Receipts Express complies by keeping all data local inside your browser profile's sandboxed storage.</span></span></td>
                 <td><span class="table-badge badge-orange">Confidential</span></td>
               </tr>
               <tr>
-                <td><strong>AI Engine Location</strong></td>
+                <td><strong>AI Engine Location</strong> <span class="info-tip" tabindex="0" aria-label="Governance application: AI Engine Location">?<span class="tip-bubble"><strong>AI Engine Location:</strong> corporate policies restrict transmitting private data to unapproved cloud AI endpoints. Receipts Express mitigates this by self-hosting the Tesseract.js OCR engine locally. All text recognition runs on your device inside your browser sandbox, requiring no internet connection.</span></span></td>
                 <td><span class="table-badge badge-teal">On-Device Only</span></td>
               </tr>
               <tr>
-                <td><strong>Data Egress Control</strong></td>
+                <td><strong>Data Egress Control</strong> <span class="info-tip" tabindex="0" aria-label="Governance application: Data Egress Control">?<span class="tip-bubble"><strong>Data Egress Control:</strong> policy compliance is enforced at the browser level via a Content-Security-Policy (CSP). The header <code>connect-src 'self'</code> programmatically blocks the browser from sending data to any external server or API, meaning even a compromised dependency cannot exfiltrate your receipts.</span></span></td>
                 <td><span class="table-badge badge-teal">Enforced CSP</span></td>
               </tr>
               <tr>
-                <td><strong>Human-in-the-Loop</strong></td>
+                <td><strong>Human-in-the-Loop</strong> <span class="info-tip" tabindex="0" aria-label="Governance application: Human-in-the-Loop">?<span class="tip-bubble"><strong>Human-in-the-Loop:</strong> AI algorithms can misread numbers or dates. To ensure financial audit readiness, the OCR engine only populates editable draft inputs. The user is the responsible human owner who must review and manually verify all dates and amounts before exporting the PDF.</span></span></td>
                 <td><span class="table-badge badge-teal">User must verify OCR</span></td>
               </tr>
             </table>
@@ -704,42 +945,47 @@
         <h1 class="slide-title">Install on Your Device</h1>
         <h2 class="slide-subtitle">Install as a Progressive Web App (PWA) in seconds</h2>
         
-        <p class="lead" style="text-align: center; margin-bottom: 1rem;">
-          Running the web app as a PWA grants it <strong>persistent storage protection</strong>, making it behave like a native app.
-        </p>
-        
-        <div class="pwa-grid">
-          <div class="glass-card pwa-card">
-            <div class="pwa-icon-container">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        <div class="slide-content-grid" style="grid-template-columns: 1.25fr 0.75fr; align-items: center; margin-top: 1rem;">
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div class="glass-card" style="padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 1.25rem;">
+              <div class="pwa-icon-container" style="margin-bottom: 0; width: 44px; height: 44px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              </div>
+              <div>
+                <strong style="font-size: 1rem; display: block; color: #ffffff;">1. iOS (Safari)</strong>
+                <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.3;">
+                  Open link in Safari, tap the <strong>Share</strong> button <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em; height:1.1em; vertical-align:-0.15em; display:inline-block; margin:0 2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>, and select <strong>Add to Home Screen</strong> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em; height:1.1em; vertical-align:-0.15em; display:inline-block; margin:0 2px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>.
+                </p>
+              </div>
             </div>
-            <div class="pwa-step-num">1</div>
-            <strong style="font-size: 1.1rem;">iOS (Safari)</strong>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4;">
-              Open Safari, tap the <strong>Share</strong> button <span style="font-size:1.1rem;">📤</span>, and select <strong>Add to Home Screen</strong> <span style="font-size:1.1rem;">➕</span>.
-            </p>
+            
+            <div class="glass-card" style="padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 1.25rem;">
+              <div class="pwa-icon-container" style="margin-bottom: 0; width: 44px; height: 44px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              </div>
+              <div>
+                <strong style="font-size: 1rem; display: block; color: #ffffff;">2. Android (Chrome)</strong>
+                <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.3;">
+                  Open link in Chrome, tap the <strong>Menu</strong> icon <span style="font-size:0.95rem;">⠇</span>, and select <strong>Install app</strong> <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em; height:1.1em; vertical-align:-0.15em; display:inline-block; margin:0 2px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>.
+                </p>
+              </div>
+            </div>
+            
+            <div class="glass-card" style="padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 1.25rem;">
+              <div class="pwa-icon-container" style="margin-bottom: 0; width: 44px; height: 44px; flex-shrink: 0; display: flex; justify-content: center; align-items: center;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <div>
+                <strong style="font-size: 1rem; display: block; color: #ffffff;">3. Desktop (Chrome/Edge)</strong>
+                <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.3;">
+                  Click the <strong>Install icon</strong> in the address bar, or select <strong>Install Receipts Express</strong> from the settings menu.
+                </p>
+              </div>
+            </div>
           </div>
           
-          <div class="glass-card pwa-card">
-            <div class="pwa-icon-container">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
-            </div>
-            <div class="pwa-step-num">2</div>
-            <strong style="font-size: 1.1rem;">Android (Chrome)</strong>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4;">
-              Open Chrome, tap the <strong>Menu</strong> icon <span style="font-size:1.1rem;">⠇</span>, and select <strong>Install app</strong> <span style="font-size:1.1rem;">📥</span>.
-            </p>
-          </div>
-          
-          <div class="glass-card pwa-card">
-            <div class="pwa-icon-container">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </div>
-            <div class="pwa-step-num">3</div>
-            <strong style="font-size: 1.1rem;">Desktop (Chrome/Edge)</strong>
-            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4;">
-              Click the <strong>Install icon</strong> in the browser's address bar, or select <strong>Install Receipts Express</strong> from the settings menu.
-            </p>
+          <div class="slide-image-container">
+            <img src="../assets/expense_reports_view.jpg" alt="Receipts Express expense report, with entries grouped and totaled by day of the trip" class="screenshot-preview">
           </div>
         </div>
       </div>
@@ -770,7 +1016,7 @@
             
             <div class="backup-demo-card">
               <div>
-                <span class="backup-warning-pill">⚠️ Backup Stale</span>
+                <span class="backup-warning-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em; height:1.1em; vertical-align:-0.15em; display:inline-block; margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Backup Stale</span>
                 <div style="font-size: 0.8rem; margin-top: 0.25rem; color: #cbd5e1;">Last backup: 8 days ago</div>
               </div>
               <button class="backup-demo-btn" id="backupDemoBtn">Back up now</button>
@@ -788,28 +1034,32 @@
         <h1 class="slide-title">Backup Recommendations</h1>
         <h2 class="slide-subtitle">Best practices for pilot participants to safeguard data</h2>
         
-        <div class="slide-content-stack">
-          <div class="glass-card" style="padding: 1.5rem;">
-            <strong style="color: #0f766e; display: block; font-size: 1.15rem; margin-bottom: 0.5rem;">📁 Save JSON Backups Externally</strong>
-            <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
-              When clicking "Back up now", the app generates a single <code>.json</code> file. 
-              <strong>Recommendation:</strong> Save this file directly into corporate/secured network storage (like OneDrive, Google Drive, iCloud, or SharePoint) under an "Expenses-Backup" folder.
-            </p>
+        <div class="slide-content-grid" style="grid-template-columns: 1.25fr 0.75fr; align-items: center; margin-top: 1rem;">
+          <div class="slide-content-stack" style="margin-top: 0; gap: 0.5rem;">
+            <div class="glass-card" style="padding: 0.75rem 1rem;">
+              <strong style="color: #0f766e; display: block; font-size: 1.05rem; margin-bottom: 0.25rem;"><svg class="slide-icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Save JSON Backups — Local First, Then Cloud</strong>
+              <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.35;">
+                When clicking "Back up now", the app generates a single <code>.json</code> file. <strong>Easiest:</strong> save it straight to your device's local storage (Downloads or Files app) first — no login, no upload wait. <strong>Then</strong>, for redundancy, copy that same file into corporate/secured cloud storage under an "Expenses-Backup" folder, in this order: OneDrive, then Google Drive, then iCloud or SharePoint — whichever your organization provides.
+              </p>
+            </div>
+            
+            <div class="glass-card" style="padding: 0.75rem 1rem;">
+              <strong style="color: #ea580c; display: block; font-size: 1.05rem; margin-bottom: 0.25rem;"><svg class="slide-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Backup Frequency Rule</strong>
+              <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.35;">
+                Always export a fresh backup after scanning new receipts on a trip. Do not ignore the in-app "Backup stale" warning. Treat the app as a capture utility, not a long-term archive, and export the PDF report promptly.
+              </p>
+            </div>
+            
+            <div class="glass-card" style="padding: 0.75rem 1rem;">
+              <strong style="color: #7c3aed; display: block; font-size: 1.05rem; margin-bottom: 0.25rem;"><svg class="slide-icon" viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>Cross-Device Restore</strong>
+              <p style="font-size: 0.82rem; color: #cbd5e1; line-height: 1.35;">
+                If you upgrade your phone or switch browsers, export a backup JSON from your old device and click "Restore from file" on your new device to seamlessly merge all your reports, receipts, and images.
+              </p>
+            </div>
           </div>
           
-          <div class="glass-card" style="padding: 1.5rem;">
-            <strong style="color: #ea580c; display: block; font-size: 1.15rem; margin-bottom: 0.5rem;">⏰ Backup Frequency Rule</strong>
-            <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
-              Always export a fresh backup after scanning new receipts on a trip. 
-              Do not ignore the in-app "Backup stale" warning. Treat Receipts Express as a <strong>capture utility, not a long-term archive</strong>. Export the final expense report PDF promptly.
-            </p>
-          </div>
-          
-          <div class="glass-card" style="padding: 1.5rem;">
-            <strong style="color: #7c3aed; display: block; font-size: 1.15rem; margin-bottom: 0.5rem;">🔄 Cross-Device Restore</strong>
-            <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
-              If you upgrade your phone or switch browsers, export a backup JSON from your old device and click "Restore from file" on your new device to seamlessly merge all your reports, receipts, and images.
-            </p>
+          <div class="slide-image-container">
+            <img src="../assets/backup_view.jpg" alt="Receipts Express home screen showing the Back up your receipts card" class="screenshot-preview">
           </div>
         </div>
       </div>
@@ -819,26 +1069,28 @@
         <h1 class="slide-title">Pilot Next Steps</h1>
         <h2 class="slide-subtitle">How to get started and contribute to the pilot</h2>
         
-        <div class="slide-content-stack" style="max-width: 850px; margin: 1rem auto 0;">
-          <div class="glass-card">
-            <h3 style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 1rem; color: #0f766e;">Safe Real-Trip Demo Guidelines</h3>
-            <ul class="fancy-list teal-bullet" style="gap: 0.75rem;">
-              <li><strong>Use Production URL Only</strong>: Always run the pilot via the live HTTPS link. Never scan real corporate receipts in local dev mode (where the Content-Security-Policy is bypassed for hot reloading).</li>
-              <li><strong>Policy Compliance Window</strong>: Since reports must be filed by the Wednesday following a trip, scan receipts as they happen, export the complete PDF/CSV on the final day of travel, upload it, and then clear the data from the PWA.</li>
+        <div class="slide-content-stack" style="max-width: 850px; margin: 0.35rem auto 0;">
+          <div class="glass-card" style="padding: 0.8rem 1.5rem;">
+            <h3 style="font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 0.35rem; color: #0f766e;">Safe Real-Trip Demo Guidelines</h3>
+            <ul class="fancy-list teal-bullet" style="gap: 0.3rem; font-size: 0.8rem;">
+              <li><strong>Use the Live HTTPS Link</strong>: Run the app via the production URL: <a href="https://jwtc2000.github.io/Receipts-Express/" target="_blank" style="color: #ea580c; text-decoration: none; font-weight: 500;">https://jwtc2000.github.io/Receipts-Express/</a> (also linked at the top of the repository). This live site enforces a browser-level Content-Security-Policy (CSP) that blocks all outgoing data.</li>
+              <li><strong>What is "Dev Mode"?</strong>: Regular pilot participants will not use dev mode — that's only for developers running raw source code locally (<code>npm run dev</code>), where browser blocks are bypassed for styling hot-reloads. The live website is completely secure.</li>
+              <li><strong>Policy Compliance Window</strong>: Since reports must be filed by the Wednesday following a trip, scan receipts as they happen, export the complete PDF/CSV on the final day of travel, upload it, and then clear the data from the PWA<span class="info-tip" tabindex="0" aria-label="How and why to clear PWA data">?<span class="tip-bubble"><strong>How:</strong> open the Menu on the home screen and tap the trash icon on the report to delete it (and all its receipt images) — you'll be asked to confirm. To wipe everything in one step instead, use your browser's site settings → "Clear site data" for this origin.<br><br><strong>Why:</strong> once a report is exported and safely backed up, there's no reason for corporate receipt images or OCR'd text to keep sitting on your device. Deleting it shortens the window during which that data could be exposed if the device is lost, shared, or compromised — keeping you inside the &lt;10-day retention target.</span></span>.</li>
               <li><strong>Minimize Storage Duration</strong>: Adhering to the Wednesday deadline ensures corporate financial data lives in the local browser database (IndexedDB) for less than 10 days, minimizing security exposure.</li>
-              <li><strong>Daily Cloud Backups</strong>: Export a JSON backup file to corporate OneDrive or Google Drive daily during travel. This prevents data loss in case the browser clears site caches.</li>
+              <li><strong>Daily Backups — Local First, Then Cloud</strong>: Export a JSON backup daily during travel. Easiest: save it to your device's local storage first (Downloads/Files) — no login needed. Then copy it to corporate cloud storage for redundancy: OneDrive, then Google Drive, then iCloud/SharePoint.</li>
               <li><strong>Verify and Report</strong>: Cross-check OCR data values against the physical receipts and log formatting suggestions.</li>
             </ul>
           </div>
         </div>
       </div>
 
+      </div>
     </main>
 
     <!-- Footer Controls -->
     <footer class="deck-footer">
       <div class="footer-meta">
-        Receipts Express Pilot Slide Deck | Proposing Team | Inspired by <a href="https://github.com/arigatoexpress/AI-Efficiency" target="_blank">AI-Efficiency</a>
+        Introduction to Receipts Express | Github: <a href="https://github.com/Jwtc2000" target="_blank">Jwtc2000</a> | <a href="mailto:Jwtc2000@users.noreply.github.com" style="color: var(--teal); text-decoration: none; font-weight: 500;">Report Bug</a> | Inspired by <a href="https://github.com/arigatoexpress/AI-Efficiency" target="_blank">AI-Efficiency</a>
       </div>
       
       <div class="controls-wrapper">
@@ -857,6 +1109,35 @@
   </div>
 
   <script>
+    // Auto-scale slides to fit viewport while preserving aspect ratio
+    function adjustSlideScale() {
+      const wrapper = document.querySelector('.slides-wrapper');
+      const inner = document.getElementById('slidesInner');
+      if (!wrapper || !inner) return;
+
+      if (window.innerWidth <= 768) {
+        inner.style.transform = 'none';
+        return;
+      }
+
+      const targetWidth = 1100;
+      const targetHeight = 680;
+
+      const wrapperWidth = wrapper.clientWidth;
+      const wrapperHeight = wrapper.clientHeight;
+
+      const scaleX = wrapperWidth / targetWidth;
+      const scaleY = wrapperHeight / targetHeight;
+
+      // Always fit completely within the wrapper bounds
+      const scale = Math.min(scaleX, scaleY);
+
+      inner.style.transform = `scale(${scale})`;
+    }
+
+    window.addEventListener('resize', adjustSlideScale);
+    window.addEventListener('DOMContentLoaded', adjustSlideScale);
+
     // Slide Navigation Logic
     const slides = document.querySelectorAll('.slide');
     const dotsContainer = document.getElementById('dotsContainer');
@@ -1008,7 +1289,7 @@
           // Update the UI pill state
           const pill = document.querySelector('.backup-warning-pill');
           if (pill) {
-            pill.textContent = '✓ Backup Completed';
+            pill.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em; height:1.1em; vertical-align:-0.15em; display:inline-block; margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>Backup Completed';
             pill.style.background = 'rgba(15, 118, 110, 0.15)';
             pill.style.borderColor = 'rgba(15, 118, 110, 0.3)';
             pill.style.color = '#2dd4bf';
@@ -1023,6 +1304,238 @@
         }, 1000);
       });
     }
+
+    // Interactive Network Graph Background for Slide 1
+    (function() {
+      const canvas = document.getElementById('networkCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let width = canvas.width = canvas.offsetWidth;
+      let height = canvas.height = canvas.offsetHeight;
+
+      const nodes = [];
+      // Scaled to canvas area (not a fixed count) — a fixed 20 nodes reads
+      // fine on a ~750,000px² desktop canvas but crowds and overlaps the
+      // title/badges on a much smaller mobile canvas.
+      let numNodes = 20;
+      function calcNumNodes(w, h) {
+        return Math.max(6, Math.min(20, Math.round((w * h) / 37000)));
+      }
+      const categories = ['burger', 'plane', 'hotel', 'taxi', 'receipt'];
+      
+      let mouseX = null;
+      let mouseY = null;
+
+      class Node {
+        constructor() {
+          this.initPosition();
+          this.x = this.targetX;
+          this.y = this.targetY;
+          this.vx = 0;
+          this.vy = 0;
+          this.size = 14;
+          this.iconType = categories[Math.floor(Math.random() * categories.length)];
+        }
+
+        initPosition() {
+          this.targetX = Math.random() * width;
+          this.targetY = Math.random() * height;
+        }
+
+        update() {
+          // Physics: push away from mouse
+          if (mouseX !== null && mouseY !== null) {
+            const dx = mouseX - this.x;
+            const dy = mouseY - this.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 200) {
+              const force = (200 - dist) / 200;
+              // Push away
+              this.vx -= (dx / dist) * force * 1.5;
+              this.vy -= (dy / dist) * force * 1.5;
+            }
+          }
+
+          // Return to target spring force
+          this.vx += (this.targetX - this.x) * 0.025;
+          this.vy += (this.targetY - this.y) * 0.025;
+
+          // Damping/friction
+          this.vx *= 0.88;
+          this.vy *= 0.88;
+
+          // Update position
+          this.x += this.vx;
+          this.y += this.vy;
+
+          // Keep within bounds
+          if (this.x < 10) this.x = 10;
+          if (this.x > width - 10) this.x = width - 10;
+          if (this.y < 10) this.y = 10;
+          if (this.y > height - 10) this.y = height - 10;
+        }
+
+        draw() {
+          ctx.save();
+          ctx.translate(this.x, this.y);
+          
+          // Draw subtle background circle glow
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size + 6, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+          ctx.lineWidth = 1;
+          ctx.fill();
+          ctx.stroke();
+
+          // Draw custom category icons
+          if (this.iconType === 'burger') {
+            // Bun top
+            ctx.beginPath();
+            ctx.arc(0, -3, 6, Math.PI, 0, false);
+            ctx.fillStyle = '#ea580c'; // Orange
+            ctx.fill();
+            // Patty
+            ctx.beginPath();
+            ctx.moveTo(-6, -1);
+            ctx.lineTo(6, -1);
+            ctx.strokeStyle = '#f97316';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            // Bun bottom
+            ctx.beginPath();
+            ctx.moveTo(-5, 2);
+            ctx.lineTo(5, 2);
+            ctx.strokeStyle = '#ea580c';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+          } else if (this.iconType === 'plane') {
+            ctx.beginPath();
+            ctx.strokeStyle = '#2dd4bf'; // Teal
+            ctx.lineWidth = 1.8;
+            ctx.moveTo(0, -7);
+            ctx.lineTo(0, 7);
+            ctx.moveTo(-7, -1);
+            ctx.lineTo(7, -1);
+            ctx.moveTo(-3, 5);
+            ctx.lineTo(3, 5);
+            ctx.stroke();
+          } else if (this.iconType === 'hotel') {
+            ctx.beginPath();
+            ctx.strokeStyle = '#a78bfa'; // Purple
+            ctx.lineWidth = 1.8;
+            ctx.moveTo(-6, 6); ctx.lineTo(-6, -4);
+            ctx.moveTo(6, 6); ctx.lineTo(6, 0);
+            ctx.moveTo(-6, 1); ctx.lineTo(6, 1);
+            ctx.rect(-4, -2, 3, 2);
+            ctx.stroke();
+          } else if (this.iconType === 'taxi') {
+            ctx.beginPath();
+            ctx.fillStyle = '#eab308'; // Yellow
+            ctx.moveTo(-3, -4);
+            ctx.lineTo(3, -4);
+            ctx.lineTo(5, 0);
+            ctx.lineTo(-5, 0);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillRect(-7, 0, 14, 4);
+            ctx.beginPath();
+            ctx.arc(-3, 4, 1.8, 0, Math.PI*2);
+            ctx.arc(3, 4, 1.8, 0, Math.PI*2);
+            ctx.fillStyle = '#475569';
+            ctx.fill();
+          } else if (this.iconType === 'receipt') {
+            ctx.beginPath();
+            ctx.strokeStyle = '#db2777'; // Pink
+            ctx.lineWidth = 1.6;
+            ctx.rect(-4, -6, 8, 12);
+            ctx.moveTo(-2, -2); ctx.lineTo(2, -2);
+            ctx.moveTo(-2, 1); ctx.lineTo(2, 1);
+            ctx.stroke();
+          }
+          
+          ctx.restore();
+        }
+      }
+
+      function init() {
+        numNodes = calcNumNodes(width, height);
+        nodes.length = 0;
+        for (let i = 0; i < numNodes; i++) {
+          nodes.push(new Node());
+        }
+      }
+
+      function resize() {
+        const slide = document.getElementById('slide-1');
+        if (!slide) return;
+        width = canvas.width = slide.clientWidth;
+        height = canvas.height = slide.clientHeight;
+        // Rebuild (not just reposition) so the node count re-scales to the
+        // new canvas area too — e.g. an orientation change on a phone.
+        init();
+      }
+
+      window.addEventListener('resize', resize);
+      setTimeout(resize, 150);
+
+      init();
+
+      // Mouse movements inside Slide 1 canvas bounds
+      const slide1 = document.getElementById('slide-1');
+      if (slide1) {
+        slide1.addEventListener('mousemove', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          mouseX = e.clientX - rect.left;
+          mouseY = e.clientY - rect.top;
+        });
+
+        slide1.addEventListener('mouseleave', () => {
+          mouseX = null;
+          mouseY = null;
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, width, height);
+
+        // Connections line render
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const n1 = nodes[i];
+            const n2 = nodes[j];
+            const dx = n1.x - n2.x;
+            const dy = n1.y - n2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 180) {
+              const alpha = (180 - dist) / 180 * 0.12;
+              ctx.beginPath();
+              ctx.moveTo(n1.x, n1.y);
+              ctx.lineTo(n2.x, n2.y);
+              ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+              ctx.lineWidth = 1;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw active nodes
+        nodes.forEach(node => {
+          node.update();
+          node.draw();
+        });
+
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    })();
   </script>
 </body>
 </html>
