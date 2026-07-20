@@ -1,4 +1,5 @@
 import { readFileSync, mkdirSync, copyFileSync, readdirSync } from 'node:fs'
+import { execSync } from 'node:child_process'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig, type Plugin, type ResolvedConfig } from 'vite'
@@ -9,6 +10,18 @@ import { VitePWA } from 'vite-plugin-pwa'
 // version — bump it there (semver) and it flows into the build and the
 // in-app About menu automatically.
 const pkg = JSON.parse(readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8'))
+
+// The exact commit the build was cut from, shown as secondary text under the
+// version in About so a stale deploy is identifiable at a glance. git may be
+// absent (e.g. a source tarball or a CI checkout without history) — any failure
+// falls back to "unknown" so it never breaks the build.
+const commitHash = (() => {
+  try {
+    return execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim()
+  } catch {
+    return 'unknown'
+  }
+})()
 
 const CSP =
   "default-src 'self'; connect-src 'self'; img-src 'self' blob: data:; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; worker-src 'self' blob:"
@@ -68,6 +81,7 @@ export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    __COMMIT_HASH__: JSON.stringify(commitHash),
   },
   plugins: [
     cspPlugin(),

@@ -8,6 +8,17 @@ user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About. Every
 merge to `main` that changes app behavior gets a version bump and a tag.
 
+## [1.9.2] - 2026-07-20
+
+### Fixed
+- About version wiring hardened into a single source of truth. The
+  version already flowed from `package.json` via `__APP_VERSION__`; a
+  vitest test now builds the app and asserts the exact `package.json`
+  version lands in the output, so any future severing of that wire fails
+  CI. The build also injects `__COMMIT_HASH__` (`git rev-parse --short
+  HEAD`, falling back to `unknown`), shown as secondary text under the
+  version in About so a stale deploy is identifiable at a glance.
+
 ## [1.9.1] - 2026-07-19
 
 ### Added

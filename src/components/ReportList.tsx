@@ -271,7 +271,10 @@ export default function ReportList({ onOpenReport, onEditExpense }: Props) {
                     View Pilot Slide Deck
                   </a>
                 </p>
-                <p className="muted">Version {__APP_VERSION__}</p>
+                <p className="muted">
+                  Version {__APP_VERSION__}{' '}
+                  <span style={{ fontSize: '0.8em', opacity: 0.7 }}>({__COMMIT_HASH__})</span>
+                </p>
               </DrawerSection>
             </div>
 
