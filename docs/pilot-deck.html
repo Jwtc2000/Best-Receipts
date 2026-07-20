@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Receipts Express — Pilot Presentation</title>
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      /* Brand Color System */
+      --teal: #0f766e;
+      --teal-dark: #115e59;
+      --teal-light: #ccfbf1;
+      --purple: #7c3aed;
+      --purple-dark: #6d28d9;
+      --purple-light: #ede9fe;
+      --orange: #ea580c;
+      --orange-light: #ffedd5;
+      
+      /* Gradients */
+      --brand-gradient: linear-gradient(135deg, #660099 0%, #ff6600 100%);
+      --teal-gradient: linear-gradient(135deg, #0f766e 0%, #115e59 100%);
+      --dark-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      
+      /* Layout & Typography */
+      --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --transition-speed: 0.5s;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: #090d16;
+      color: #f8fafc;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+
+    /* Presentation Container */
+    .deck-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2.5rem;
+      background: var(--dark-gradient);
+    }
+
+    /* Top Progress Bar & Header */
+    .deck-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon-svg {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      margin: 0 2rem;
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--brand-gradient);
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .slide-number {
+      font-family: var(--font-display);
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #94a3b8;
+      min-width: 45px;
+      text-align: right;
+    }
+
+    /* Slides Wrapper */
+    .slides-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 2rem 0;
+      perspective: 1200px;
+    }
+
+    .slide {
+      position: absolute;
+      width: 100%;
+      max-width: 1100px;
+      height: 100%;
+      max-height: 620px;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.95) translateZ(-60px);
+      transition: opacity var(--transition-speed) ease,
+                  transform var(--transition-speed) cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility var(--transition-speed);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateZ(0);
+    }
+
+    /* Slide Layout Variations */
+    .slide-content-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+      margin-top: 1.5rem;
+    }
+
+    .slide-content-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    /* Typography */
+    h1.slide-title {
+      font-family: var(--font-display);
+      font-size: 3rem;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.03em;
+      background: linear-gradient(to right, #ffffff 30%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h2.slide-subtitle {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 1.5rem;
+    }
+
+    p.lead {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      font-weight: 300;
+    }
+
+    /* Lists and Cards */
+    ul.fancy-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    ul.fancy-list li {
+      position: relative;
+      padding-left: 2rem;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+
+    ul.fancy-list li::before {
+      content: "➔";
+      position: absolute;
+      left: 0;
+      color: #ea580c;
+      font-weight: bold;
+    }
+
+    ul.fancy-list.teal-bullet li::before {
+      color: #0f766e;
+    }
+
+    /* Cards & Containers */
+    .glass-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: transform 0.3s ease, border-color 0.3s ease;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .accent-card {
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.15) 0%, rgba(124, 58, 237, 0.05) 100%);
+      border: 1px solid rgba(15, 118, 110, 0.3);
+    }
+
+    .highlight-text {
+      color: #0f766e;
+      font-weight: 600;
+    }
+
+    .gradient-text {
+      background: var(--brand-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+
+    /* Footer & Controls */
+    .deck-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 1.5rem;
+    }
+
+    .footer-meta {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    .footer-meta a {
+      color: #94a3b8;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-meta a:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+
+    .controls-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .dots-nav {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .dot.active {
+      background: #ffffff;
+      transform: scale(1.3);
+    }
+
+    .nav-btn {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: #ffffff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: background 0.3s, transform 0.2s, border-color 0.3s;
+      outline: none;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.4);
+      transform: scale(1.05);
+    }
+
+    .nav-btn:active {
+      transform: scale(0.95);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Presentation Theme Specific Styles */
+    .slide-title-large {
+      font-size: 4.5rem !important;
+      font-weight: 900 !important;
+      letter-spacing: -0.04em !important;
+      margin-bottom: 1rem !important;
+    }
+
+    /* Table styles */
+    .slide-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .slide-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-family: var(--font-display);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .slide-table td {
+      padding: 1rem;
+      font-size: 0.95rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: #e2e8f0;
+      vertical-align: middle;
+    }
+
+    .slide-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-teal {
+      background: rgba(15, 118, 110, 0.2);
+      color: #0f766e;
+      border: 1px solid rgba(15, 118, 110, 0.3);
+    }
+
+    .badge-orange {
+      background: rgba(234, 88, 12, 0.2);
+      color: #ea580c;
+      border: 1px solid rgba(234, 88, 12, 0.3);
+    }
+
+    /* PWA Platform Layout */
+    .pwa-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .pwa-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .pwa-icon-container {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .pwa-step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--brand-gradient);
+      color: white;
+      font-size: 0.8rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* Background plane animation for Title slide */
+    .plane-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .floating-plane {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      color: rgba(255, 255, 255, 0.15);
+      fill: currentColor;
+    }
+
+    @keyframes fly-diagonal-1 {
+      0% { transform: translate(-50px, 400px) rotate(15deg); opacity: 0; }
+      10% { opacity: 0.3; }
+      90% { opacity: 0.3; }
+      100% { transform: translate(1200px, -50px) rotate(15deg); opacity: 0; }
+    }
+
+    @keyframes fly-diagonal-2 {
+      0% { transform: translate(-50px, 100px) rotate(5deg); opacity: 0; }
+      15% { opacity: 0.2; }
+      85% { opacity: 0.2; }
+      100% { transform: translate(1200px, 150px) rotate(5deg); opacity: 0; }
+    }
+
+    .plane-1 { animation: fly-diagonal-1 25s linear infinite; }
+    .plane-2 { animation: fly-diagonal-2 30s linear infinite; animation-delay: -10s; }
+
+    /* Interactive Backup Demo */
+    .backup-demo-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: rgba(9, 13, 22, 0.6);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .backup-demo-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+    }
+
+    .backup-demo-btn {
+      background: var(--teal);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+
+    .backup-demo-btn:hover {
+      background: var(--teal-dark);
+    }
+
+    .backup-warning-pill {
+      background: rgba(234, 88, 12, 0.15);
+      border: 1px solid rgba(234, 88, 12, 0.3);
+      color: var(--orange);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-height: 700px) {
+      .deck-container { padding: 1.5rem; }
+      .slide { max-height: 480px; }
+      h1.slide-title { font-size: 2.25rem; }
+      h2.slide-subtitle { font-size: 1.25rem; margin-bottom: 0.75rem; }
+      p.lead { font-size: 1rem; }
+      .slide-content-grid { gap: 1.5rem; }
+      .glass-card { padding: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+    
+    <!-- Top Header -->
+    <header class="deck-header">
+      <div class="brand-title">
+        <svg class="brand-icon-svg" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+          <rect width="512" height="512" rx="96" fill="#0f766e"/>
+          <path d="M156 96h200a12 12 0 0 1 12 12v296l-26-18-27 18-27-18-27 18-27-18-27 18-27-18-26 18V108a12 12 0 0 1 12-12z" fill="#f8fafc"/>
+          <rect x="180" y="150" width="152" height="16" rx="8" fill="#0f766e"/>
+          <rect x="180" y="196" width="110" height="12" rx="6" fill="#94a3b8"/>
+          <rect x="180" y="228" width="110" height="12" rx="6" fill="#94a3b8"/>
+          <rect x="306" y="196" width="26" height="12" rx="6" fill="#64748b"/>
+          <rect x="306" y="228" width="26" height="12" rx="6" fill="#64748b"/>
+        </svg>
+        <span>Receipts Express</span>
+      </div>
+      
+      <div class="progress-track">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      
+      <div class="slide-number" id="slideNumber">1 / 8</div>
+    </header>
+
+    <!-- Slides Wrapper -->
+    <main class="slides-wrapper">
+      
+      <!-- Slide 1: Cover -->
+      <div class="slide active" id="slide-1">
+        <div class="plane-canvas">
+          <svg class="floating-plane plane-1" viewBox="0 0 24 24"><path d="M22 2L2 8.66L11.5 12.5L16 21.16L22 2Z" fill="currentColor"/></svg>
+          <svg class="floating-plane plane-2" viewBox="0 0 24 24"><path d="M22 2L2 8.66L11.5 12.5L16 21.16L22 2Z" fill="currentColor"/></svg>
+        </div>
+        <div style="z-index: 1; text-align: center;">
+          <h1 class="slide-title slide-title-large">Receipts Express</h1>
+          <h2 class="slide-subtitle" style="color: #cbd5e1; font-weight: 400;">Standardized Receipt-to-PDF Capture</h2>
+          <div style="display: inline-flex; gap: 10px; margin-top: 1rem;">
+            <span class="table-badge badge-teal" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">Progressive Web App (Offline-First)</span>
+            <span class="table-badge badge-orange" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">Private by Design</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: The Core Challenge -->
+      <div class="slide" id="slide-2">
+        <h1 class="slide-title">The Challenge with Expense Capture</h1>
+        <h2 class="slide-subtitle">Why traditional reporting causes friction and security risks</h2>
+        
+        <div class="slide-content-grid">
+          <div class="glass-card">
+            <h3 style="font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 1rem; color: #ea580c;">The Manual Burden</h3>
+            <ul class="fancy-list">
+              <li>Receipts accumulate loose in email inbox, pockets, or camera rolls during business travel.</li>
+              <li>Reconstructing dates, merchants, and totals weeks later leads to errors and delayed filing.</li>
+              <li>No quick way to export polished compilations for downstream travel systems.</li>
+            </ul>
+          </div>
+          
+          <div class="glass-card">
+            <h3 style="font-family: var(--font-display); font-size: 1.4rem; margin-bottom: 1rem; color: #7c3aed;">The Privacy Trap</h3>
+            <ul class="fancy-list" style="--bullet-color: var(--purple)">
+              <li style="color: #e2e8f0;">Common free scanner apps contain third-party ad-tracking toolkits.</li>
+              <li>Sensitive financial data (merchant locations, items, card fractions) gets uploaded to unvetted cloud systems.</li>
+              <li>Lack of structural boundaries leaves personal/corporate data vulnerable to exfiltration.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: The Solution -->
+      <div class="slide" id="slide-3">
+        <h1 class="slide-title">Enter Receipts Express</h1>
+        <h2 class="slide-subtitle">A fast, private utility running entirely on your device</h2>
+        
+        <div class="slide-content-grid" style="grid-template-columns: 1.2fr 0.8fr;">
+          <div class="glass-card accent-card">
+            <h3 style="font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 1.25rem;">Key Pilot Features</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+              <div>
+                <strong style="color: #ffffff; display: block; margin-bottom: 0.4rem;">📷 On-Device OCR</strong>
+                <span style="font-size: 0.9rem; color: #94a3b8;">Tesseract.js scans receipts and extracts fields locally. No external APIs.</span>
+              </div>
+              <div>
+                <strong>📂 Reports Manager</strong>
+                <span style="font-size: 0.9rem; color: #94a3b8;">Create, name, and drag-and-drop receipts to reorder. Group by business trip.</span>
+              </div>
+              <div>
+                <strong>🔒 Secure Storage</strong>
+                <span style="font-size: 0.9rem; color: #94a3b8;">Data stays safely in your local browser sandbox (IndexedDB). Zero servers.</span>
+              </div>
+              <div>
+                <strong>📄 Local PDF Export</strong>
+                <span style="font-size: 0.9rem; color: #94a3b8;">Generates a comprehensive trip summary followed by full-page receipt images.</span>
+              </div>
+            </div>
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="glass-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <div>
+                <h4 style="font-size: 1rem;">Camera Scan</h4>
+                <p style="font-size: 0.8rem; color: #94a3b8;">Fast image-to-form pre-filling</p>
+              </div>
+            </div>
+            <div class="glass-card" style="padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <div>
+                <h4 style="font-size: 1rem;">Content Security</h4>
+                <p style="font-size: 0.8rem; color: #94a3b8;">CSP blocks all egress traffic</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Governance & AI-Efficiency -->
+      <div class="slide" id="slide-4">
+        <h1 class="slide-title">Governance & Guidelines</h1>
+        <h2 class="slide-subtitle">Inspiration and alignment with corporate frameworks</h2>
+        
+        <div class="slide-content-grid">
+          <div>
+            <p class="lead" style="margin-bottom: 1rem;">
+              Receipts Express is structured after the <strong>AI Pilot Program Template</strong> from the FedEx AI Efficiency Hub:
+            </p>
+            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.5rem;">
+              Credit to the open-source repository <a href="https://github.com/arigatoexpress/AI-Efficiency" target="_blank" style="color: #ea580c; text-decoration: none; font-weight: 500;">arigatoexpress/AI-Efficiency</a> for establishing the risk-review format we apply to this pilot proposal.
+            </p>
+            
+            <div class="glass-card" style="padding: 1.25rem;">
+              <h4 style="color: #ffffff; margin-bottom: 0.5rem; font-size: 1.05rem;">Why this matters:</h4>
+              <p style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.4;">
+                Applying a standardized governance checklist upfront ensures privacy compliance, legal clarity, and clear risk mitigation strategies before introducing utility tools to departmental workflows.
+              </p>
+            </div>
+          </div>
+          
+          <div class="glass-card">
+            <h3 style="font-family: var(--font-display); font-size: 1.25rem; margin-bottom: 1rem; color: #ffffff;">Governance Snapshot</h3>
+            <table class="slide-table" style="margin-top: 0;">
+              <tr>
+                <td><strong>Data Classification</strong></td>
+                <td><span class="table-badge badge-orange">Confidential</span></td>
+              </tr>
+              <tr>
+                <td><strong>AI Engine Location</strong></td>
+                <td><span class="table-badge badge-teal">On-Device Only</span></td>
+              </tr>
+              <tr>
+                <td><strong>Data Egress Control</strong></td>
+                <td><span class="table-badge badge-teal">Enforced CSP</span></td>
+              </tr>
+              <tr>
+                <td><strong>Human-in-the-Loop</strong></td>
+                <td><span class="table-badge badge-teal">User must verify OCR</span></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 5: PWA Installation Guide -->
+      <div class="slide" id="slide-5">
+        <h1 class="slide-title">Install on Your Device</h1>
+        <h2 class="slide-subtitle">Install as a Progressive Web App (PWA) in seconds</h2>
+        
+        <p class="lead" style="text-align: center; margin-bottom: 1rem;">
+          Running the web app as a PWA grants it <strong>persistent storage protection</strong>, making it behave like a native app.
+        </p>
+        
+        <div class="pwa-grid">
+          <div class="glass-card pwa-card">
+            <div class="pwa-icon-container">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            </div>
+            <div class="pwa-step-num">1</div>
+            <strong style="font-size: 1.1rem;">iOS (Safari)</strong>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4;">
+              Open Safari, tap the <strong>Share</strong> button <span style="font-size:1.1rem;">📤</span>, and select <strong>Add to Home Screen</strong> <span style="font-size:1.1rem;">➕</span>.
+            </p>
+          </div>
+          
+          <div class="glass-card pwa-card">
+            <div class="pwa-icon-container">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+            </div>
+            <div class="pwa-step-num">2</div>
+            <strong style="font-size: 1.1rem;">Android (Chrome)</strong>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4;">
+              Open Chrome, tap the <strong>Menu</strong> icon <span style="font-size:1.1rem;">⠇</span>, and select <strong>Install app</strong> <span style="font-size:1.1rem;">📥</span>.
+            </p>
+          </div>
+          
+          <div class="glass-card pwa-card">
+            <div class="pwa-icon-container">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            </div>
+            <div class="pwa-step-num">3</div>
+            <strong style="font-size: 1.1rem;">Desktop (Chrome/Edge)</strong>
+            <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.4;">
+              Click the <strong>Install icon</strong> in the browser's address bar, or select <strong>Install Receipts Express</strong> from the settings menu.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 6: Backup Architecture -->
+      <div class="slide" id="slide-6">
+        <h1 class="slide-title">Backup Architecture & Risks</h1>
+        <h2 class="slide-subtitle">Understanding browser storage lifecycle and durability</h2>
+        
+        <div class="slide-content-grid" style="grid-template-columns: 1fr 1.1fr;">
+          <div class="glass-card">
+            <h3 style="font-family: var(--font-display); font-size: 1.25rem; color: #ea580c; margin-bottom: 1rem;">Storage Eviction Risk</h3>
+            <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5; margin-bottom: 1rem;">
+              Since all receipts and images are stored locally in the browser database (IndexedDB) with no cloud backup, they are subject to <strong>data loss</strong> if:
+            </p>
+            <ul class="fancy-list" style="font-size: 0.9rem;">
+              <li>The device runs critically low on disk space.</li>
+              <li>The user manually clears cookies and website data.</li>
+              <li>The OS automatically purges browser caches.</li>
+            </ul>
+          </div>
+
+          <div class="backup-demo-container">
+            <h4 style="font-family: var(--font-display); font-size: 1.1rem; color: #fff;">In-App Backup Dashboard</h4>
+            <p style="font-size: 0.85rem; color: #94a3b8;">
+              Receipts Express includes local backup controls to bundle all database records & base64 images into a single JSON file.
+            </p>
+            
+            <div class="backup-demo-card">
+              <div>
+                <span class="backup-warning-pill">⚠️ Backup Stale</span>
+                <div style="font-size: 0.8rem; margin-top: 0.25rem; color: #cbd5e1;">Last backup: 8 days ago</div>
+              </div>
+              <button class="backup-demo-btn" id="backupDemoBtn">Back up now</button>
+            </div>
+            
+            <p style="font-size: 0.8rem; color: #94a3b8; font-style: italic;">
+              *The app displays a warning card on the home screen if data goes unbacked-up for more than 7 days.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 7: Backup Recommendations -->
+      <div class="slide" id="slide-7">
+        <h1 class="slide-title">Backup Recommendations</h1>
+        <h2 class="slide-subtitle">Best practices for pilot participants to safeguard data</h2>
+        
+        <div class="slide-content-stack">
+          <div class="glass-card" style="padding: 1.5rem;">
+            <strong style="color: #0f766e; display: block; font-size: 1.15rem; margin-bottom: 0.5rem;">📁 Save JSON Backups Externally</strong>
+            <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+              When clicking "Back up now", the app generates a single <code>.json</code> file. 
+              <strong>Recommendation:</strong> Save this file directly into corporate/secured network storage (like OneDrive, Google Drive, iCloud, or SharePoint) under an "Expenses-Backup" folder.
+            </p>
+          </div>
+          
+          <div class="glass-card" style="padding: 1.5rem;">
+            <strong style="color: #ea580c; display: block; font-size: 1.15rem; margin-bottom: 0.5rem;">⏰ Backup Frequency Rule</strong>
+            <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+              Always export a fresh backup after scanning new receipts on a trip. 
+              Do not ignore the in-app "Backup stale" warning. Treat Receipts Express as a <strong>capture utility, not a long-term archive</strong>. Export the final expense report PDF promptly.
+            </p>
+          </div>
+          
+          <div class="glass-card" style="padding: 1.5rem;">
+            <strong style="color: #7c3aed; display: block; font-size: 1.15rem; margin-bottom: 0.5rem;">🔄 Cross-Device Restore</strong>
+            <p style="font-size: 0.95rem; color: #cbd5e1; line-height: 1.5;">
+              If you upgrade your phone or switch browsers, export a backup JSON from your old device and click "Restore from file" on your new device to seamlessly merge all your reports, receipts, and images.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 8: Next Steps & Pilot Checklist -->
+      <div class="slide" id="slide-8">
+        <h1 class="slide-title">Pilot Next Steps</h1>
+        <h2 class="slide-subtitle">How to get started and contribute to the pilot</h2>
+        
+        <div class="slide-content-stack" style="max-width: 850px; margin: 1rem auto 0;">
+          <div class="glass-card">
+            <h3 style="font-family: var(--font-display); font-size: 1.3rem; margin-bottom: 1rem; color: #0f766e;">Safe Real-Trip Demo Guidelines</h3>
+            <ul class="fancy-list teal-bullet" style="gap: 0.75rem;">
+              <li><strong>Use Production URL Only</strong>: Always run the pilot via the live HTTPS link. Never scan real corporate receipts in local dev mode (where the Content-Security-Policy is bypassed for hot reloading).</li>
+              <li><strong>Policy Compliance Window</strong>: Since reports must be filed by the Wednesday following a trip, scan receipts as they happen, export the complete PDF/CSV on the final day of travel, upload it, and then clear the data from the PWA.</li>
+              <li><strong>Minimize Storage Duration</strong>: Adhering to the Wednesday deadline ensures corporate financial data lives in the local browser database (IndexedDB) for less than 10 days, minimizing security exposure.</li>
+              <li><strong>Daily Cloud Backups</strong>: Export a JSON backup file to corporate OneDrive or Google Drive daily during travel. This prevents data loss in case the browser clears site caches.</li>
+              <li><strong>Verify and Report</strong>: Cross-check OCR data values against the physical receipts and log formatting suggestions.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Footer Controls -->
+    <footer class="deck-footer">
+      <div class="footer-meta">
+        Receipts Express Pilot Slide Deck | Proposing Team | Inspired by <a href="https://github.com/arigatoexpress/AI-Efficiency" target="_blank">AI-Efficiency</a>
+      </div>
+      
+      <div class="controls-wrapper">
+        <button class="nav-btn" id="prevBtn" aria-label="Previous slide" disabled>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        
+        <div class="dots-nav" id="dotsContainer"></div>
+        
+        <button class="nav-btn" id="nextBtn" aria-label="Next slide">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script>
+    // Slide Navigation Logic
+    const slides = document.querySelectorAll('.slide');
+    const dotsContainer = document.getElementById('dotsContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+    const slideNumber = document.getElementById('slideNumber');
+    
+    let currentSlideIndex = 0;
+
+    // Initialize dots
+    slides.forEach((_, index) => {
+      const dot = document.createElement('div');
+      dot.classList.add('dot');
+      if (index === 0) dot.classList.add('active');
+      dot.addEventListener('click', () => goToSlide(index));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = document.querySelectorAll('.dot');
+
+    function updateControls() {
+      prevBtn.disabled = currentSlideIndex === 0;
+      nextBtn.disabled = currentSlideIndex === slides.length - 1;
+      
+      dots.forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === currentSlideIndex);
+      });
+      
+      // Update progress bar
+      const progressPercent = ((currentSlideIndex) / (slides.length - 1)) * 100;
+      progressBar.style.width = `${progressPercent}%`;
+      
+      // Update slide number
+      slideNumber.textContent = `${currentSlideIndex + 1} / ${slides.length}`;
+      
+      // Update URL hash
+      window.history.replaceState(null, null, `#slide-${currentSlideIndex + 1}`);
+    }
+
+    function goToSlide(index) {
+      if (index < 0 || index >= slides.length) return;
+      
+      // Deactivate current slide
+      slides[currentSlideIndex].classList.remove('active');
+      
+      // Activate new slide
+      currentSlideIndex = index;
+      slides[currentSlideIndex].classList.add('active');
+      
+      updateControls();
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < slides.length - 1) {
+        goToSlide(currentSlideIndex + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlideIndex > 0) {
+        goToSlide(currentSlideIndex - 1);
+      }
+    }
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      }
+    });
+
+    // Touch Swipe Controls
+    let touchStartX = 0;
+    let touchEndX = 0;
+    
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+      const swipeDistance = touchEndX - touchStartX;
+      if (swipeDistance < -50) {
+        nextSlide();
+      } else if (swipeDistance > 50) {
+        prevSlide();
+      }
+    }
+
+    // Connect event listeners
+    prevBtn.addEventListener('click', prevSlide);
+    nextBtn.addEventListener('click', nextSlide);
+
+    // Read initial hash if present
+    window.addEventListener('DOMContentLoaded', () => {
+      const hash = window.location.hash;
+      const match = hash.match(/#slide-(\d+)/);
+      if (match) {
+        const slideIdx = parseInt(match[1], 10) - 1;
+        if (slideIdx >= 0 && slideIdx < slides.length) {
+          goToSlide(slideIdx);
+        }
+      }
+      updateControls();
+    });
+
+    // Interactive Demo Simulation
+    const backupDemoBtn = document.getElementById('backupDemoBtn');
+    if (backupDemoBtn) {
+      backupDemoBtn.addEventListener('click', () => {
+        if (backupDemoBtn.disabled) return;
+        
+        backupDemoBtn.textContent = 'Saving backup JSON...';
+        backupDemoBtn.disabled = true;
+        backupDemoBtn.style.background = '#64748b';
+        
+        setTimeout(() => {
+          // Trigger a simulated JSON file download
+          const mockData = {
+            app: "receipts-express",
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            reports: [
+              { id: "mock-r1", name: "Q3 Travel", createdAt: Date.now() }
+            ],
+            expenses: [
+              { id: "mock-e1", reportId: "mock-r1", position: 0, title: "Team Lunch", merchant: "Acme Diner", amount: 45.50, currency: "USD", date: "2026-07-15", category: "Meals", notes: "Discussed pilot goals", createdAt: Date.now() }
+            ],
+            images: []
+          };
+          
+          const blob = new Blob([JSON.stringify(mockData, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `receipts-express-pilot-mock-backup.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          // Update the UI pill state
+          const pill = document.querySelector('.backup-warning-pill');
+          if (pill) {
+            pill.textContent = '✓ Backup Completed';
+            pill.style.background = 'rgba(15, 118, 110, 0.15)';
+            pill.style.borderColor = 'rgba(15, 118, 110, 0.3)';
+            pill.style.color = '#2dd4bf';
+          }
+          
+          const timeText = pill.nextElementSibling;
+          if (timeText) {
+            timeText.textContent = 'Last backup: Just now';
+          }
+          
+          backupDemoBtn.textContent = 'Success!';
+        }, 1000);
+      });
+    }
+  </script>
+</body>
+</html>

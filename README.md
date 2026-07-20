@@ -8,6 +8,16 @@ Receipts Express is a **Progressive Web App (PWA)**: it runs on iOS, Android, an
 
 ---
 
+## Pilot Program & Presentations
+
+If you are a co-worker looking to help pilot Receipts Express, check out the following resources:
+* **[Pilot Proposal (docs/PILOT.md)](./docs/PILOT.md)**: Standardized capture proposal for departments.
+* **[Interactive Slide Deck (docs/pilot-deck.html)](./docs/pilot-deck.html)**: Interactive presentation slideshow for team meetings.
+* **[Slide Deck Content (docs/PILOT_DECK.md)](./docs/PILOT_DECK.md)**: Markdown version of the presentation deck.
+* **[Project Governance Review (docs/governance/REVIEW.md)](./docs/governance/REVIEW.md)**: Compliance checklist based on corporate templates.
+
+---
+
 ## Welcome to GitHub
 
 If you are new here, you might be wondering where you have landed. Here is a simple guide to what this page is and the tools we use:
