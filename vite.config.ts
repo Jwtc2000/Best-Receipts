@@ -43,7 +43,7 @@ export default defineConfig({
     cspPlugin(),
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icons/icon.svg'],
       manifest: {
         name: 'Receipts Express',
