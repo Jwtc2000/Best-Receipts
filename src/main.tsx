@@ -2,21 +2,18 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import UpdateBanner from './components/UpdateBanner'
+import StorageWarning from './components/StorageWarning'
+import GlobalErrorToast from './components/GlobalErrorToast'
 import './styles.css'
 
-// Ask the OS to mark this app's storage (reports + receipt images in
-// IndexedDB) as persistent so it is never evicted under storage pressure.
-if (navigator.storage?.persist) {
-  navigator.storage.persist().then((granted) => {
-    if (!granted) {
-      console.info('Persistent storage not granted yet — install the app to your home screen to strengthen the guarantee.')
-    }
-  })
-}
+// StorageWarning requests durable storage (navigator.storage.persist) on mount
+// and, if it isn't granted and the user has data, warns about the eviction risk.
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
+    <StorageWarning />
     <UpdateBanner />
+    <GlobalErrorToast />
   </React.StrictMode>,
 )

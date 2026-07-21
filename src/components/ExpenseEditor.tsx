@@ -44,6 +44,11 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
   const [scanState, setScanState] = useState<'idle' | 'scanning' | 'done' | 'failed'>('idle')
   const [scanPct, setScanPct] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [captureError, setCaptureError] = useState<string | null>(null)
+  // True once the user has typed a field or attached/removed a photo — i.e. there
+  // is unsaved work that Back / tab-close / a service-worker reload would discard.
+  const [dirty, setDirty] = useState(false)
   const cameraInput = useRef<HTMLInputElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -79,11 +84,39 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
     }
   }, [imageUrl])
 
-  const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }))
+  // Warn the browser before it unloads (tab close, refresh, PWA back-gesture, or
+  // the service-worker update reload) while there's an unsaved draft — otherwise
+  // the typed fields and captured photo are gone with no confirmation.
+  useEffect(() => {
+    if (!dirty) return
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [dirty])
+
+  const set = (patch: Partial<Draft>) => {
+    setDirty(true)
+    setDraft((d) => ({ ...d, ...patch }))
+  }
 
   const onImagePicked = async (file: File | undefined) => {
     if (!file) return
-    const compressed = await compressImage(file)
+    setCaptureError(null)
+    // Compression can genuinely fail (an unsupported format like HEIC on some
+    // browsers, a corrupt file, or canvas.toBlob returning null). Without this
+    // catch the rejection was swallowed by the `void onImagePicked(...)` caller
+    // and the freshly captured photo vanished with no message.
+    let compressed: Blob
+    try {
+      compressed = await compressImage(file)
+    } catch {
+      setCaptureError("Couldn't process that photo — try again, or pick a different image.")
+      return
+    }
+    setDirty(true)
     setImageBlob(compressed)
     setImageChanged(true)
     setImageUrl((old) => {
@@ -105,11 +138,13 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
       }))
       setScanState('done')
     } catch {
+      // The photo is already attached; OCR failing just means manual entry.
       setScanState('failed')
     }
   }
 
   const removeImage = () => {
+    setDirty(true)
     setImageBlob(null)
     setImageChanged(true)
     setImageUrl((old) => {
@@ -119,10 +154,18 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
     setScanState('idle')
   }
 
+  const handleBack = () => {
+    if (dirty && !window.confirm('Discard this expense? Your typed details and photo will be lost.')) {
+      return
+    }
+    onDone()
+  }
+
   const save = async () => {
     const amount = parseFloat(draft.amount)
     if (isNaN(amount)) return
     setSaving(true)
+    setSaveError(null)
     try {
       const previousImageId = existing?.imageId
       // Three cases: untouched (keep imageId as-is); replaced with a new
@@ -160,7 +203,18 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
         personalAmount,
       }
       await saveExpenseWithImage(expense, newImage, staleImageId)
+      setDirty(false)
       onDone()
+    } catch (err) {
+      // The write failed (most commonly QuotaExceededError on a near-full
+      // device, where an IndexedDB transaction aborts). Keep the editor open
+      // with the draft intact and tell the user, instead of silently returning
+      // to a state that looks like a successful save.
+      setSaveError(
+        (err as DOMException)?.name === 'QuotaExceededError'
+          ? "Couldn't save — this device's storage is full. Free up space, or remove the photo and try again."
+          : "Couldn't save — something went wrong. Your details are still here; please try again.",
+      )
     } finally {
       setSaving(false)
     }
@@ -172,7 +226,7 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
     <>
       <header className="topbar">
         <HeaderPlanes />
-        <button className="icon-btn" onClick={onDone} aria-label="Back">
+        <button className="icon-btn" onClick={handleBack} aria-label="Back">
           <Icon name="chevron-left" size={22} />
         </button>
         <h1>{expenseId ? 'Edit Expense' : 'New Expense'}</h1>
@@ -188,14 +242,24 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
           accept="image/*"
           capture="environment"
           hidden
-          onChange={(e) => void onImagePicked(e.target.files?.[0])}
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            // Clear the value so re-picking the *same* file (e.g. after a failed
+            // capture) still fires onChange instead of silently doing nothing.
+            e.target.value = ''
+            void onImagePicked(file)
+          }}
         />
         <input
           ref={fileInput}
           type="file"
           accept="image/*"
           hidden
-          onChange={(e) => void onImagePicked(e.target.files?.[0])}
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            e.target.value = ''
+            void onImagePicked(file)
+          }}
         />
 
         {imageUrl ? (
@@ -241,6 +305,12 @@ export default function ExpenseEditor({ reportId, expenseId, onDone }: Props) {
         )}
         {scanState === 'failed' && (
           <div className="scan-banner warn">Couldn't read the receipt — enter details manually</div>
+        )}
+        {captureError && (
+          <div className="scan-banner warn" role="alert">{captureError}</div>
+        )}
+        {saveError && (
+          <div className="scan-banner warn" role="alert">{saveError}</div>
         )}
 
         <div className="field-grid">
