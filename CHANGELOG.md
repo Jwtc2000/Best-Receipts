@@ -8,7 +8,17 @@ user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About. Every
 merge to `main` that changes app behavior gets a version bump and a tag.
 
-## [1.9.3] - 2026-07-21
+## [1.9.4] - 2026-07-20
+
+### Fixed
+- PDF export now goes through the same hardened share/download path as CSV
+  export instead of calling jsPDF's `doc.save()` directly. `doc.save()` was
+  fire-and-forget internally, so a blocked or failed download wouldn't
+  reject and the export would look like it succeeded when nothing was
+  saved — the exact "failed export reported as success" bug the 1.9.3
+  data-loss hardening pass fixed for CSV but missed for PDF.
+
+## [1.9.3] - 2026-07-20
 
 ### Fixed
 - Data-loss hardening (top findings from the data-loss audit):
