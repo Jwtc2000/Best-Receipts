@@ -6,6 +6,7 @@ import { blobToDataURL, imageDimensions } from './image'
 import { getProfile, profileSummaryLines } from './profile'
 import { dayColor, contrastText } from './colors'
 import { foodBalanceForDate, formatFoodBalance, formatPersonalTotal } from './mealAllowance'
+import { shareOrDownloadFile } from './share'
 
 const PAGE_W = 595.28 // A4 portrait, points
 const PAGE_H = 841.89
@@ -282,5 +283,11 @@ export async function exportReportPdf(report: Report, expenses: Expense[]): Prom
   }
 
   const safeName = report.name.replace(/[^\w-]+/g, '_') || 'expense_report'
-  doc.save(`${safeName}.pdf`)
+  // Go through the same hardened share/download path CSV export uses, rather
+  // than jsPDF's own doc.save() — that call is fire-and-forget internally, so
+  // a blocked/failed download wouldn't reject and this export would look like
+  // it succeeded when nothing was saved.
+  const blob = doc.output('blob')
+  const file = new File([blob], `${safeName}.pdf`, { type: 'application/pdf' })
+  await shareOrDownloadFile(file, `${report.name} — PDF export`)
 }
