@@ -8,6 +8,36 @@ user-facing features, and `PATCH` for fixes with no visible feature change. The
 version lives in `package.json` and is shown in the app under Menu → About. Every
 merge to `main` that changes app behavior gets a version bump and a tag.
 
+## [1.9.3] - 2026-07-21
+
+### Fixed
+- Data-loss hardening (top findings from the data-loss audit):
+  - Saving an expense that fails (e.g. `QuotaExceededError` on a full
+    device) now keeps the editor open and shows an error instead of
+    silently looking like success.
+  - The in-progress expense draft is now guarded: a `beforeunload`
+    warning fires while it's dirty (tab close, refresh, service-worker
+    reload) and the Back button confirms before discarding typed details
+    and the captured photo.
+  - A receipt photo that fails to compress/decode now shows an error and
+    can be re-picked, instead of vanishing silently.
+  - Failed PDF/CSV exports surface an error rather than looking identical
+    to success. The download path no longer revokes the blob URL before
+    the browser reads it (which could abort the download) and reports
+    failure instead of an unconditional success.
+  - A global unhandled-rejection toast surfaces otherwise-silent write
+    failures as a last-resort safety net.
+- Pilot slide deck on mobile (Safari/iOS): the page now scrolls so
+  content taller than the screen is reachable (was locked by
+  `overflow:hidden` + `100vh`), and the cover-slide animation fills the
+  screen and re-fits on layout/orientation changes instead of sticking
+  in a strip at the top.
+
+### Added
+- Eviction-aware storage warning: on a non-installed browser where
+  durable storage isn't granted and the user has data, a banner explains
+  the risk and prompts installing to the Home Screen and backing up.
+
 ## [1.9.2] - 2026-07-20
 
 ### Fixed

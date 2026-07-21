@@ -1081,3 +1081,73 @@ body {
     opacity: 1;
   }
 }
+
+/* ---- Storage (eviction) warning banner ---- */
+
+.storage-warning {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--orange-light);
+  border-bottom: 1px solid var(--orange);
+  color: var(--text);
+}
+
+.storage-warning-body strong {
+  display: block;
+  color: var(--orange);
+  font-size: 0.95rem;
+  margin-bottom: 2px;
+}
+
+.storage-warning-body p {
+  font-size: 0.82rem;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.storage-warning .btn {
+  flex-shrink: 0;
+}
+
+/* ---- Export error banner (report view) ---- */
+
+.report-export-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--orange-light);
+  color: var(--orange);
+  font-size: 0.85rem;
+}
+
+.report-export-error span {
+  flex: 1;
+}
+
+/* ---- Global unhandled-error toast ---- */
+
+.error-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: min(92vw, 420px);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--orange);
+  animation: update-banner-in 0.2s ease-out;
+}

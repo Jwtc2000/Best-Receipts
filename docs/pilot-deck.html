@@ -630,23 +630,47 @@
     }
 
     @media (max-width: 768px) {
+      /* The desktop deck locks the page (body { overflow:hidden; height:100vh })
+         because each slide is a fixed, scaled box. On a phone slides flow at
+         natural height and can be taller than the screen, so the page itself
+         must scroll. 100dvh (dynamic viewport height) tracks the actual visible
+         area as Safari's toolbars show/hide — 100vh does not, which is what
+         pushed slide content below an unreachable fold. */
+      html, body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: auto;
+        min-height: 100dvh;
+        -webkit-overflow-scrolling: touch;
+      }
+
       .deck-container {
         padding: 0.75rem;
         height: auto;
-        min-height: 100vh;
+        min-height: 100dvh;
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        justify-content: flex-start;
       }
 
       .slides-wrapper {
         margin: 0.5rem 0;
-        overflow-y: auto;
-        overflow-x: hidden;
+        /* Let the page (body) scroll rather than trapping content in an inner
+           scroll box whose extent fell below the fold on iOS. */
+        overflow: visible;
         flex-grow: 1;
         display: block;
         height: auto;
-        min-height: 450px;
+        min-height: 0;
+      }
+
+      /* Cover slide: fill the space between header and footer and centre its
+         content so the network animation reads as full-screen instead of a
+         short strip stuck at the top. */
+      #slide-1.active {
+        min-height: calc(100dvh - 150px);
+        justify-content: center;
+        align-items: center;
       }
 
       .slides-inner {
@@ -1482,7 +1506,17 @@
       }
 
       window.addEventListener('resize', resize);
+      window.addEventListener('load', resize);
       setTimeout(resize, 150);
+
+      // The cover slide's height on mobile depends on layout that isn't settled
+      // at first paint (web-font load, the min-height fill rule, orientation
+      // changes). Sizing the canvas only once left the animation confined to a
+      // short band at the top. Re-fit whenever slide-1's box actually changes.
+      const slideForCanvas = document.getElementById('slide-1');
+      if (slideForCanvas && 'ResizeObserver' in window) {
+        new ResizeObserver(() => resize()).observe(slideForCanvas);
+      }
 
       init();
 

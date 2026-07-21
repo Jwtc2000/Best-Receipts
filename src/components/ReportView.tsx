@@ -35,6 +35,7 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   const [otherReports, setOtherReports] = useState<Report[]>([])
   const [movingId, setMovingId] = useState<string | null>(null)
   const [exporting, setExporting] = useState<'pdf' | 'csv' | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
   const [renaming, setRenaming] = useState(false)
   const [nameDraft, setNameDraft] = useState('')
@@ -170,9 +171,14 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   const doExportPdf = async () => {
     if (!report || expenses.length === 0) return
     setExportMenuOpen(false)
+    setExportError(null)
     setExporting('pdf')
     try {
       await exportReportPdf(report, expenses)
+    } catch {
+      // A swallowed export error looks identical to success; surface it so the
+      // user doesn't walk away believing they have a PDF they don't.
+      setExportError("Couldn't create the PDF — please try again.")
     } finally {
       setExporting(null)
     }
@@ -181,9 +187,12 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
   const doExportCsv = async () => {
     if (!report || expenses.length === 0) return
     setExportMenuOpen(false)
+    setExportError(null)
     setExporting('csv')
     try {
       await exportReportCsv(report, expenses)
+    } catch {
+      setExportError("Couldn't create the CSV — please try again.")
     } finally {
       setExporting(null)
     }
@@ -384,6 +393,16 @@ export default function ReportView({ reportId, onBack, onAddExpense, onEditExpen
           <span>
             Employee pays credit card company: <strong>{personalTotal}</strong>
           </span>
+        </div>
+      )}
+
+      {exportError && (
+        <div className="report-export-error" role="alert">
+          <Icon name="warning" size={14} />
+          <span>{exportError}</span>
+          <button className="icon-btn" aria-label="Dismiss" onClick={() => setExportError(null)}>
+            <Icon name="close" size={14} />
+          </button>
         </div>
       )}
 
